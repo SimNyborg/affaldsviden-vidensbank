@@ -11,6 +11,9 @@ body{margin:0}
 a{color:#0A602D}a:hover{color:#06401E}
 .vb-hero{background-color:#0A602D;background-image:linear-gradient(90deg,rgba(6,64,30,.9) 0%,rgba(6,64,30,.75) 40%,rgba(6,64,30,.1) 72%),url(img/f0ef4424257a621daa0374b68909b5bd.jpg);background-size:cover;background-position:center 62%}
 @media (max-width:720px){.vb-hero{background-image:linear-gradient(rgba(6,64,30,.8),rgba(6,64,30,.8)),url(img/f0ef4424257a621daa0374b68909b5bd.jpg);background-position:58% 62%}}
+.vb-pil{animation:vb-vip 2.4s ease-in-out infinite}
+@keyframes vb-vip{0%,60%,100%{transform:translateY(0)}75%{transform:translateY(5px)}90%{transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){.vb-pil{animation:none}}
 </style>
 </head>
 <body>
@@ -91,7 +94,7 @@ a{color:#0A602D}a:hover{color:#06401E}
       </template>
       <template data-if="{{ heroArrow }}">
         <button type="button" aria-label="Rul ned til indholdet" onClick="{{ scrollDown }}" style="position: absolute; right: max(16px, 3vw); bottom: 28px; width: 56px; height: 56px; padding: 0; display: flex; align-items: center; justify-content: center; border: 1.5px solid #FFFFFF; border-radius: 50%; background: rgba(6, 40, 20, 0.25); color: #FFFFFF; cursor: pointer;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16"></path><path d="M5 13l7 7 7-7"></path></svg>
+          <svg class="vb-pil" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16"></path><path d="M5 13l7 7 7-7"></path></svg>
         </button>
       </template>
     </div>
