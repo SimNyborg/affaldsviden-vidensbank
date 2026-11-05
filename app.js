@@ -782,7 +782,7 @@ class Component extends DCLogic {
     const seg = (on) => 'min-height: 40px; padding: 0 14px; border: 0; border-radius: 8px; cursor: pointer; font: 500 15px "Roboto", Arial, sans-serif; ' + (on ? 'background: #0A602D; color: #FFFFFF;' : 'background: transparent; color: #24312A;');
     const newest = VIDEN.filter((d) => d.img).sort((a, b) => b.year - a.year).slice(0, 10).map((d) => ({ ...d, meta: d.org + ' · ' + d.year, open: openDoc(d) }));
     const heroFull = view === 'home' || view === 'search';
-    // På forsiden fylder toppen skærmen (minus menuen), med formålet nederst og en pil ned til indholdet. Ved søgning er den lav.
+    // På forsiden fylder toppen 2/3 af skærmen, så starten af næste afsnit kan ses, og en pil peger ned til indholdet. Ved søgning er den lav.
     const heroTall = view === 'home';
     const docAi = !!doc && st.docAiId === st.docId;
     return {
@@ -794,7 +794,7 @@ class Component extends DCLogic {
       // Samme afstand foroven ved søgning, så søgefeltet ikke flytter sig, når man begynder at skrive.
       logoStyle: 'display: block; width: auto; height: ' + (narrow ? '22px' : '30px') + ';',
       heroInnerStyle: 'box-sizing: border-box; max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; position: relative; padding: clamp(36px, 9vh, 104px) max(16px, 3vw) 40px; '
-        + (heroTall ? 'min-height: calc(100vh - 61px); min-height: min(calc(100svh - 61px), 960px);' : ''),
+        + (heroTall ? 'min-height: 66.67vh; min-height: min(66.67svh, 720px);' : ''),
       heroMainStyle: 'display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; width: 100%;',
       heroCtaStyle: 'margin: 0; max-width: 640px; font-size: 16px; line-height: 1.55; color: #FFFFFF; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);',
       // Blød rulning, og et direkte hop bagefter, hvis browseren ikke ruller blødt
