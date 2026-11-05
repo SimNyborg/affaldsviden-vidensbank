@@ -419,7 +419,7 @@ a{color:#0A602D}a:hover{color:#06401E}
             <span style="font-size: 13px; color: #50656E;">Lavet med AI ud fra dokumentet.</span>
           </section>
           <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-            <template data-if="{{ doc.hasUrl }}"><a href="{{ doc.url }}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 22px; border-radius: 10px; background: #0A602D; color: #FFFFFF; text-decoration: none; font-weight: 500;">Åbn PDF</a></template>
+            <template data-if="{{ doc.hasUrl }}"><a href="{{ doc.url }}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 22px; border-radius: 10px; background: #0A602D; color: #FFFFFF; text-decoration: none; font-weight: 500;">{{ doc.openLabel }}</a></template>
             <template data-if="{{ doc.noUrl }}"><span style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 10px; background: #F4F6F2; color: #50656E;">PDF'en er ikke lagt ind i prototypen</span></template>
             <button type="button" aria-expanded="{{ docAiStr }}" onClick="{{ askAboutDoc }}" style="min-height: 44px; padding: 0 18px; border: 1px solid #0A602D; border-radius: 10px; background: #FFFFFF; color: #0A602D; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">Spørg AI om dokumentet</button>
           </div>
