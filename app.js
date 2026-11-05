@@ -320,11 +320,25 @@ class Component extends DCLogic {
       + (s.proposal ? 'border: 1px dashed #A9B5B0;' : 'border: 1px solid #DAE0E0;');
 
     // AI-spørgsmål i prompt-vinduet under søgefeltet. Spørgsmål om et enkelt dokument har sin egen tilstand på dokumentsiden.
+    // AI-vinduet både svarer og finder dokumenter frem. Dokumenterne findes ud fra ordene i spørgsmålet
+    // (ordstammer i titel, temaer og resuméer). Svaret er et eksempel; kun batterispørgsmålet har et rigtigt svar med kilder.
     const isBattery = /batter/i.test(st.aiQ);
-    const aiAnswer = isBattery ? 'Ifølge NIRAS\' analyse for KL kostede indsamling og håndtering af bærbare batterier i gennemsnit 11 kr. pr. kg, og kommunernes samlede omkostninger blev skønnet til 27 og 26 mio. kr. i 2021 og 2022 (kilde 2, side 4). Vil I opgøre jeres egen omkostning pr. kg, beskriver KL og Brancheforeningen Cirkulær, hvilke udgifter der skal med (kilde 1).'
-      : 'I prototypen findes kun et eksempelsvar om batteriindsamling. I den rigtige vidensbank svarer AI\'en ud fra de dokumenter, der passer til spørgsmålet, og viser dem her som kilder.';
+    const STOP = new Set('hvad hvordan hvorfor hvor hvem hvilke hvilken hvornår koster findes finde gøre skal kunne have mange meget mest bedst andre nogle noget være blive bliver efter eller ikke også mere mellem over under ved fra med til om der som det den des sig jeg vi man kan er har gør affald affaldet kommune kommuner kommunerne kommunens dokument dokumenter'.split(' '));
+    // Ord, der begynder med "affald", sammenlignes på flere bogstaver, ellers passer de på næsten alt
+    const aiStems = st.aiQ.toLowerCase().replace(/[^a-zæøå0-9 ]/g, ' ').split(/\s+/).filter((w) => w.length >= 4 && !STOP.has(w))
+      .map((w) => w.slice(0, w.startsWith('affald') ? 10 : 7)).filter((w) => w.length > 7 || !w.startsWith('affald'));
+    const aiScore = (d) => aiStems.reduce((s, w) => s + (d.title.toLowerCase().includes(w) ? 3 : 0) + (d.temaer.join(' ').toLowerCase().includes(w) ? 2 : 0)
+      + (d.res.toLowerCase().includes(w) ? 1 : 0) + ((d.long || '').toLowerCase().includes(w) ? 1 : 0), 0);
     const aiSrc = isBattery ? ['C085', 'NIR'].map((id) => VIDEN.find((d) => d.id === id)) : [];
+    // Kun dokumenter, der scorer mindst 40 % af det bedste, kommer med
+    const aiBest = Math.max(0, ...VIDEN.map(aiScore));
+    const aiHits = VIDEN.filter((d) => !aiSrc.includes(d)).map((d) => [d, aiScore(d)]).filter(([, s]) => s > 0 && s >= Math.max(2, aiBest * 0.4))
+      .sort((a, b) => b[1] - a[1] || b[0].year - a[0].year).slice(0, 4).map(([d]) => d);
+    const aiAnswer = isBattery ? 'Ifølge NIRAS\' analyse for KL kostede indsamling og håndtering af bærbare batterier i gennemsnit 11 kr. pr. kg, og kommunernes samlede omkostninger blev skønnet til 27 og 26 mio. kr. i 2021 og 2022 (kilde 2, side 4). Vil I opgøre jeres egen omkostning pr. kg, beskriver KL og Brancheforeningen Cirkulær, hvilke udgifter der skal med (kilde 1).'
+      : aiHits.length ? 'I den færdige vidensbank skriver AI\'en her et kort svar ud fra dokumenterne nedenfor og henviser til, hvor i dokumenterne svaret står. I prototypen vises kun de dokumenter, der passer bedst til spørgsmålet.'
+      : 'Ingen dokumenter i prototypen passer til spørgsmålet. Prøv fx "Hvad koster det at indsamle batterier?" eller "Erfaringer med genbrugspladser".';
     const aiSources = aiSrc.map((d, i) => ({ label: (aiSrc.length > 1 ? (i + 1) + '. ' : '') + (d.sid ? d.title + ', ' + d.org : d.title + ' (' + d.org + ', ' + d.year + ')'), open: openDoc(d) }));
+    const aiDocs = aiHits.map((d) => ({ title: d.title, meta: d.org + ' · ' + d.year, img: d.img || '', coverBg: d.img ? '#F4F6F2' : '#E6F4EA', open: openDoc(d) }));
     const seg = (on) => 'min-height: 40px; padding: 0 14px; border: 0; border-radius: 8px; cursor: pointer; font: 500 15px "Roboto", Arial, sans-serif; ' + (on ? 'background: #0A602D; color: #FFFFFF;' : 'background: transparent; color: #24312A;');
     const newest = VIDEN.filter((d) => d.img).slice(0, 10).map((d) => ({ ...d, meta: d.org + ' · ' + d.year, open: openDoc(d) }));
     const heroFull = view === 'home' || view === 'search';
@@ -336,17 +350,20 @@ class Component extends DCLogic {
       mobileMenu: narrow && st.menuOpen, menuOpenStr: String(narrow && st.menuOpen), menuLabel: st.menuOpen ? 'Luk' : 'Menu',
       toggleMenu: () => this.setState({ menuOpen: !st.menuOpen }),
       heroFull, heroTall, heroArrow: heroTall && !narrow, heroAi: heroFull && st.aiOpen,
-      heroInnerStyle: 'max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; position: relative; '
-        + (heroTall ? 'gap: 28px; padding: 40px max(16px, 3vw) 28px; min-height: calc(100vh - 137px); min-height: min(calc(100svh - 137px), 900px);' : 'gap: 14px; padding: 44px max(16px, 3vw) 40px;'),
-      heroMainStyle: 'display: flex; flex-direction: column; gap: 14px;' + (heroTall ? ' margin-block: auto;' : ''),
-      heroCtaStyle: 'margin: 0; max-width: 620px; font-size: 15px; line-height: 1.55; color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);' + (narrow ? '' : ' margin-right: 76px;'),
+      // Som den gamle forside: alt centreret i den øverste del, så skraldespanden står frit nederst.
+      // Samme afstand foroven ved søgning, så søgefeltet ikke flytter sig, når man begynder at skrive.
+      logoStyle: 'display: block; width: auto; height: ' + (narrow ? '22px' : '30px') + ';',
+      heroInnerStyle: 'box-sizing: border-box; max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; position: relative; padding: clamp(36px, 9vh, 104px) max(16px, 3vw) 40px; '
+        + (heroTall ? 'min-height: calc(100vh - 61px); min-height: min(calc(100svh - 61px), 960px);' : ''),
+      heroMainStyle: 'display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; width: 100%;',
+      heroCtaStyle: 'margin: 0; max-width: 640px; font-size: 16px; line-height: 1.55; color: #FFFFFF; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);',
       // Blød rulning, og et direkte hop bagefter, hvis browseren ikke ruller blødt
       scrollDown: () => { try {
         const el = document.getElementById('vb-indhold'); if (!el) return;
         const y0 = window.scrollY; el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         setTimeout(() => { if (window.scrollY === y0) el.scrollIntoView({ block: 'start' }); }, 350);
       } catch (e) {} },
-      heroH1Style: 'margin: 0; font-family: \'Anton\', \'Arial Narrow\', Arial, sans-serif; font-weight: 400; font-size: ' + (heroTall ? 'clamp(48px, 8vw, 92px)' : 'clamp(40px, 6.5vw, 68px)') + '; line-height: 1; letter-spacing: 0.02em;',
+      heroH1Style: 'margin: 0 0 4px; font-family: \'Inter\', \'Roboto\', Arial, sans-serif; font-weight: 800; font-size: clamp(44px, 8.5vw, 112px); line-height: 1; letter-spacing: -0.01em; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.25);',
       docAi, docAiStr: String(docAi),
       goHome: go({ view: 'home' }), goAlle: go({ view: 'alle', ...FRESET }),
       showFilters, showTemaFilter: view === 'alle', showFilterRow: !narrow || st.filtersOpen,
@@ -382,6 +399,7 @@ class Component extends DCLogic {
       aiQ: st.aiQ, setAiQ: (e) => this.setState({ aiQ: e.target.value, aiAsked: false }),
       askNow: () => this.setState({ aiAsked: true }),
       aiAsked: st.aiAsked && !!st.aiQ.trim(), aiAnswer, aiHasSources: aiSources.length > 0, aiSources,
+      aiHasDocs: aiDocs.length > 0, aiDocs, aiDocsLabel: isBattery ? 'Flere dokumenter om emnet' : 'Dokumenter, der passer til spørgsmålet',
       askAboutDoc: () => docAi ? this.setState({ docAiId: '', docAsked: false })
         : this.setState({ docAiId: st.docId, docAsked: true, docQ: doc ? 'Hvad er det vigtigste i "' + (doc.sid ? doc.title + ', ' + doc.org : doc.title) + '"?' : '' }),
       docQ: st.docQ, setDocQ: (e) => this.setState({ docQ: e.target.value, docAsked: false }),

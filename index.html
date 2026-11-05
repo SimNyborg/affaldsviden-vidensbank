@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Vidensbank · designforslag</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800&family=Roboto:wght@400;500;700&display=swap">
 <style>
 body{margin:0}
 a{color:#0A602D}a:hover{color:#06401E}
-.vb-hero{background-color:#0A602D;background-image:linear-gradient(90deg,rgba(6,64,30,.9) 0%,rgba(6,64,30,.75) 40%,rgba(6,64,30,.1) 72%),url(img/f0ef4424257a621daa0374b68909b5bd.jpg);background-size:cover;background-position:center 62%}
-@media (max-width:720px){.vb-hero{background-image:linear-gradient(rgba(6,64,30,.8),rgba(6,64,30,.8)),url(img/f0ef4424257a621daa0374b68909b5bd.jpg);background-position:58% 62%}}
+.vb-hero{background-color:#5E7A86;background-image:linear-gradient(180deg,rgba(20,30,40,.38) 0%,rgba(20,30,40,.22) 45%,rgba(20,30,40,.08) 70%,rgba(20,30,40,.25) 100%),url(img/f0ef4424257a621daa0374b68909b5bd.jpg);background-size:cover;background-position:center 62%}
+@media (max-width:720px){.vb-hero{background-image:linear-gradient(180deg,rgba(20,30,40,.5) 0%,rgba(20,30,40,.35) 60%,rgba(20,30,40,.3) 100%),url(img/f0ef4424257a621daa0374b68909b5bd.jpg);background-position:50% 62%}}
+.vb-hero a.vb-lnk,.vb-hero button.vb-lnk{color:#A8DC6E}
 .vb-pil{animation:vb-vip 2.4s ease-in-out infinite}
 @keyframes vb-vip{0%,60%,100%{transform:translateY(0)}75%{transform:translateY(5px)}90%{transform:translateY(0)}}
 @media (prefers-reduced-motion:reduce){.vb-pil{animation:none}}
@@ -23,7 +24,7 @@ a{color:#0A602D}a:hover{color:#06401E}
 
   <header style="background: #FFFFFF; border-bottom: 1px solid #DAE0E0;">
     <div style="max-width: 1180px; margin: 0 auto; padding: 12px max(16px, 3vw); display: flex; align-items: center; gap: 28px;">
-      <a href="#" style="text-decoration: none; font-weight: 700; font-size: 24px; color: #0A602D; letter-spacing: -0.01em;">Affaldsviden</a>
+      <a href="#" aria-label="Affaldsviden" style="display: block; line-height: 0;"><img src="img/113a04a9753750471211ed7ca8080ecc.png" alt="Affaldsviden" style="{{ logoStyle }}"></a>
       <template data-if="{{ wide }}">
         <nav aria-label="Hovedmenu" style="margin-left: auto; display: flex; flex-wrap: wrap; gap: 22px; font-size: 15px;">
           <a href="#" style="color: #24312A; text-decoration: none;">Om</a>
@@ -57,20 +58,23 @@ a{color:#0A602D}a:hover{color:#06401E}
     <div style="{{ heroInnerStyle }}">
       <div style="{{ heroMainStyle }}">
       <h1 style="{{ heroH1Style }}"><a href="#" onClick="{{ goHome }}" style="color: #FFFFFF; text-decoration: none;">VIDENSBANK</a></h1>
-      <div style="display: flex; flex-wrap: wrap; gap: 8px; max-width: 620px;">
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; width: 100%; max-width: 620px;">
         <label for="q" style="position: absolute; left: -9999px;">Søg i vidensbanken</label>
-        <input id="q" type="search" value="{{ q }}" onInput="{{ setQ }}" placeholder="Søg efter dokument, emne eller kommune" style="flex: 1 1 260px; min-width: 0; font: inherit; font-size: 17px; padding: 14px 16px; border: 0; border-radius: 10px; background: #FFFFFF; color: #24312A;">
+        <input id="q" type="search" value="{{ q }}" onInput="{{ setQ }}" placeholder="Søg efter dokument, emne eller kommune" style="flex: 1 1 260px; min-width: 0; font: inherit; font-size: 17px; padding: 14px 16px; border: 0; border-radius: 10px; background: #FFFFFF; color: #24312A; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);">
       </div>
-      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-        <button type="button" aria-expanded="{{ aiOpenStr }}" onClick="{{ toggleAi }}" style="min-height: 40px; padding: 0 14px; border: 1px solid #FFFFFF; border-radius: 999px; background: transparent; color: #FFFFFF; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">{{ aiToggleLabel }}</button>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
+        <button type="button" aria-expanded="{{ aiOpenStr }}" onClick="{{ toggleAi }}" style="min-height: 40px; padding: 0 14px; border: 1px solid #FFFFFF; border-radius: 999px; background: rgba(0, 0, 0, 0.12); color: #FFFFFF; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">{{ aiToggleLabel }}</button>
       </div>
+      <template data-if="{{ heroTall }}">
+        <p style="{{ heroCtaStyle }}">Har I dokumenter, som andre kan bruge? <button type="button" onClick="{{ goIndsend }}" style="padding: 0; border: 0; background: none; color: #A8DC6E; font: 700 16px 'Roboto', Arial, sans-serif; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;">Indsend dem her</button>, eller send dem til <b style="color: #A8DC6E; user-select: all;">jhn@jhn.dk</b>.</p>
+      </template>
       <template data-if="{{ heroAi }}">
-        <div style="max-width: 620px; display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 15px; background: #FFFFFF; color: #24312A; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);">
-          <label for="aiq" style="font-weight: 700;">Spørg AI om vidensbankens dokumenter</label>
+        <div style="box-sizing: border-box; width: 100%; max-width: 620px; display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 15px; background: #FFFFFF; color: #24312A; text-align: left; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);">
+          <label for="aiq" style="font-weight: 700;">Spørg AI, eller beskriv hvad du leder efter</label>
           <textarea id="aiq" rows="2" value="{{ aiQ }}" onInput="{{ setAiQ }}" placeholder="Fx: Hvad koster det at indsamle batterier?" style="font: inherit; padding: 10px 12px; border: 1px solid #A9B5B0; border-radius: 10px; resize: vertical; color: #24312A;"></textarea>
           <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
             <button type="button" onClick="{{ askNow }}" style="min-height: 44px; padding: 0 20px; border: 0; border-radius: 10px; background: #0A602D; color: #FFFFFF; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">Spørg</button>
-            <span style="font-size: 13px; color: #50656E;">Svarer kun ud fra dokumenterne i vidensbanken og viser kilderne.</span>
+            <span style="font-size: 13px; color: #50656E;">Svarer ud fra vidensbankens dokumenter og viser de dokumenter, der passer til spørgsmålet.</span>
           </div>
           <template data-if="{{ aiAsked }}">
             <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid #DAE0E0;">
@@ -83,17 +87,30 @@ a{color:#0A602D}a:hover{color:#06401E}
                   </template>
                 </div>
               </template>
+              <template data-if="{{ aiHasDocs }}">
+                <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 4px;">
+                  <span style="font-size: 14px; color: #50656E;">{{ aiDocsLabel }}</span>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap: 8px;">
+                    <template data-for="{{ aiDocs }}" data-as="d">
+                      <button type="button" onClick="{{ d.open }}" style="display: flex; gap: 10px; align-items: center; padding: 8px; border: 1px solid #DAE0E0; border-radius: 10px; background: #FFFFFF; text-align: left; cursor: pointer; font: inherit; color: inherit; min-width: 0;">
+                        <span style="flex: 0 0 38px; width: 38px; aspect-ratio: 210 / 297; overflow: hidden; border: 1px solid #DAE0E0; border-radius: 4px; background: {{ d.coverBg }};"><template data-if="{{ d.img }}"><img src="{{ d.img }}" alt="" style="width: 100%; height: 100%; object-fit: contain; display: block;"></template></span>
+                        <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                          <span style="font-weight: 700; font-size: 14px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ d.title }}</span>
+                          <span style="font-size: 13px; color: #50656E;">{{ d.meta }}</span>
+                        </span>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </template>
               <span style="font-size: 12px; color: #50656E;">Eksempel på svar i prototypen.</span>
             </div>
           </template>
         </div>
       </template>
       </div>
-      <template data-if="{{ heroTall }}">
-        <p style="{{ heroCtaStyle }}">Har I dokumenter, som andre kan bruge? <button type="button" onClick="{{ goIndsend }}" style="padding: 0; border: 0; background: none; color: #FFFFFF; font: 700 15px 'Roboto', Arial, sans-serif; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;">Indsend dem her</button>, eller send dem til <b style="color: #FFFFFF; user-select: all;">jhn@jhn.dk</b>.</p>
-      </template>
       <template data-if="{{ heroArrow }}">
-        <button type="button" aria-label="Rul ned til indholdet" onClick="{{ scrollDown }}" style="position: absolute; right: max(16px, 3vw); bottom: 28px; width: 56px; height: 56px; padding: 0; display: flex; align-items: center; justify-content: center; border: 1.5px solid #FFFFFF; border-radius: 50%; background: rgba(6, 40, 20, 0.25); color: #FFFFFF; cursor: pointer;">
+        <button type="button" aria-label="Rul ned til indholdet" onClick="{{ scrollDown }}" style="position: absolute; right: max(16px, 3vw); bottom: 28px; width: 56px; height: 56px; padding: 0; display: flex; align-items: center; justify-content: center; border: 1.5px solid #FFFFFF; border-radius: 50%; background: rgba(0, 0, 0, 0.18); color: #FFFFFF; cursor: pointer;">
           <svg class="vb-pil" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16"></path><path d="M5 13l7 7 7-7"></path></svg>
         </button>
       </template>
