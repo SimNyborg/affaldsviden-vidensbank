@@ -363,7 +363,7 @@ class Component extends DCLogic {
         const y0 = window.scrollY; el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         setTimeout(() => { if (window.scrollY === y0) el.scrollIntoView({ block: 'start' }); }, 350);
       } catch (e) {} },
-      heroH1Style: 'margin: 0 0 4px; font-family: \'Inter\', \'Roboto\', Arial, sans-serif; font-weight: 800; font-size: clamp(44px, 8.5vw, 112px); line-height: 1; letter-spacing: -0.01em; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.25);',
+      heroH1Style: 'margin: 0 0 4px; font-family: \'Inter\', \'Roboto\', Arial, sans-serif; font-weight: 700; font-size: clamp(44px, 8.5vw, 112px); line-height: 1; letter-spacing: 0; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.25);',
       docAi, docAiStr: String(docAi),
       goHome: go({ view: 'home' }), goAlle: go({ view: 'alle', ...FRESET }),
       showFilters, showTemaFilter: view === 'alle', showFilterRow: !narrow || st.filtersOpen,
