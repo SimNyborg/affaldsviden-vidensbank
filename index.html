@@ -244,10 +244,10 @@ a{color:#0A602D}a:hover{color:#06401E}
             </template>
             <div style="display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between;">
               <label style="flex: 1 1 320px; min-width: 0; display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 15px;">
-                <input id="upshare" type="checkbox" onChange="{{ setUpShare }}" style="width: 20px; height: 20px; margin: 1px 0 0; accent-color: #0A602D; flex: none;">
-                <span>Dokumenterne må deles med de kommuner og affaldsselskaber, der deltager i Affaldsviden.dk.</span>
+                <input id="upshare" type="checkbox" required aria-required="true" onChange="{{ setUpShare }}" style="width: 20px; height: 20px; margin: 1px 0 0; accent-color: #0A602D; flex: none;">
+                <span>Jeg bekræfter, at dokumenterne må deles med de kommuner og affaldsselskaber, der deltager i Affaldsviden.dk.</span>
               </label>
-              <button type="button" onClick="{{ sendUp }}" style="min-height: 44px; padding: 0 28px; border: 0; border-radius: 10px; background: #0A602D; color: #FFFFFF; font: 500 16px 'Roboto', Arial, sans-serif; cursor: pointer;">Indsend</button>
+              <button type="button" onClick="{{ sendUp }}" aria-disabled="{{ upNotReady }}" style="{{ upBtnStyle }}">Indsend</button>
             </div>
           </div>
         </template>

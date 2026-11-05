@@ -335,13 +335,17 @@ class Component extends DCLogic {
     else if (isList) crumbHere = listTitle;
     else if (view === 'indsend') crumbHere = 'Indsend dokumenter';
 
-    // Indsend dokumenter: kræver mindst én fil og accept af deling. I prototypen bliver intet sendt.
+    // Indsend dokumenter: kræver mindst én fil og en bekræftelse af, at de må deles. I prototypen bliver intet sendt.
+    // Knappen er dæmpet, indtil begge dele er på plads, men giver stadig en forklaring, hvis man trykker.
     const nUp = st.upFiles.length;
+    const upReady = nUp > 0 && st.upShare;
     const sendUp = () => {
-      const err = !nUp && !st.upShare ? 'Vælg mindst ét dokument, og sæt hak, hvis det må deles.'
-        : !nUp ? 'Vælg mindst ét dokument.' : !st.upShare ? 'Sæt hak, hvis dokumenterne må deles.' : '';
+      const err = !nUp && !st.upShare ? 'Vælg mindst ét dokument, og bekræft, at det må deles.'
+        : !nUp ? 'Vælg mindst ét dokument.' : !st.upShare ? 'Bekræft, at dokumenterne må deles. Vi kan kun tage imod dokumenter, der må deles.' : '';
       this.setState(err ? { upError: err } : { upSent: true, upError: '' });
     };
+    const upBtnStyle = 'min-height: 44px; padding: 0 28px; border: 0; border-radius: 10px; font: 500 16px "Roboto", Arial, sans-serif; cursor: pointer; '
+      + (upReady ? 'background: #0A602D; color: #FFFFFF;' : 'background: #DAE0E0; color: #5D6B64;');
 
     // Faste dokumenter, temaer og "Se alle temaer" bruger samme felt og samme gitter, så forsiden hænger sammen
     // Lange ord deles med bindestreg (siden er dansk), og gitteret giver alle felter samme højde.
@@ -423,7 +427,7 @@ class Component extends DCLogic {
       upName: st.upName, setUpName: (e) => this.setState({ upName: e.target.value }),
       upMail: st.upMail, setUpMail: (e) => this.setState({ upMail: e.target.value }),
       setUpShare: (e) => this.setState({ upShare: !!e.target.checked, upError: '' }),
-      upHasError: !!st.upError, upError: st.upError, sendUp,
+      upHasError: !!st.upError, upError: st.upError, sendUp, upBtnStyle, upNotReady: upReady ? 'false' : 'true',
       upThanks: 'Vi har modtaget ' + nUp + (nUp === 1 ? ' dokument' : ' dokumenter') + (st.upOrg.trim() ? ' fra ' + st.upOrg.trim() : '') + '.',
       q: st.q, setQ: (e) => this.setState({ q: e.target.value }),
       aiOpen: st.aiOpen, aiOpenStr: String(st.aiOpen), aiToggleLabel: st.aiOpen ? 'Luk AI-spørgsmål' : 'Stil et spørgsmål til AI',
