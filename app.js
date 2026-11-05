@@ -265,9 +265,10 @@ class Component extends DCLogic {
     }
     const countOpts = (vals) => Object.entries(vals.reduce((m, v) => { m[v] = (m[v] || 0) + 1; return m; }, {}));
     const optList = (vals, sorter) => countOpts(vals).sort(sorter || ((a, b) => a[0].localeCompare(b[0], 'da'))).map(([v, n]) => ({ value: v, label: v + ' (' + n + ')' }));
-    const fSelBase = (on) => 'min-height: 40px; font: 400 15px "Roboto", Arial, sans-serif; padding: 0 10px; border-radius: 10px; color: #24312A; min-width: 0; max-width: 100%; cursor: pointer; '
+    // Alle felter fylder deres kolonne i filtergitteret, så kanterne flugter. Sorteringen står sidst på computer og lige under søgefeltet på mobil.
+    const fSelBase = (on) => 'box-sizing: border-box; width: 100%; min-width: 0; min-height: ' + (narrow ? '44px' : '42px') + '; font: 400 15px "Roboto", Arial, sans-serif; padding: 0 8px; border-radius: 10px; color: #24312A; cursor: pointer; text-overflow: ellipsis; '
       + (on ? 'border: 1px solid #0A602D; background: #E6F4EA;' : 'border: 1px solid #C9D2CD; background: #FFFFFF;');
-    const fSel = (on) => (narrow ? 'flex: 1 1 calc(50% - 4px); ' : 'flex: 0 1 210px; ') + fSelBase(on);
+    const fSel = (on) => 'order: 2; ' + fSelBase(on);
     const isList = ['tema', 'alle', 'search'].includes(view);
 
     // Dokumentside
@@ -351,7 +352,8 @@ class Component extends DCLogic {
       goHome: go({ view: 'home' }), goAlle: go({ view: 'alle', ...FRESET }),
       showFilters, showTemaFilter: view === 'alle', showFilterRow: !narrow || st.filtersOpen,
       fq: st.fq, setFq: (e) => this.setState({ fq: e.target.value }), fqPlaceholder: view === 'tema' ? 'Søg i ' + listTitle : 'Søg i alle dokumenter',
-      sortValue, setFSort: (e) => this.setState({ fSort: e.target.value }), sortSelStyle: fSelBase(false),
+      sortValue, setFSort: (e) => this.setState({ fSort: e.target.value }), sortSelStyle: (narrow ? 'order: 1; ' : 'order: 3; ') + fSelBase(false),
+      filterGridStyle: 'display: grid; grid-template-columns: ' + (narrow ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fill, minmax(150px, 1fr))') + '; gap: 8px; align-items: center; padding: 12px; border-radius: 15px; background: #F4F6F2;',
       sortOptions: (fWords.length ? [{ value: 'match', label: 'Bedst match' }] : []).concat([
         { value: 'nyeste', label: 'Nyeste først' }, { value: 'aeldste', label: 'Ældste først' }, { value: 'tilfoejet', label: 'Senest tilføjet' },
         { value: 'titel', label: 'Titel A-Å' }, { value: 'udgiver', label: 'Udgiver A-Å' }]),

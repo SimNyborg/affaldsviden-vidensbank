@@ -307,21 +307,17 @@ a{color:#0A602D}a:hover{color:#06401E}
           </div>
         </template>
         <template data-if="{{ showFilters }}">
-          <div style="display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 15px; background: #F4F6F2;">
-            <div style="display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center;">
+          <!-- Ét gitter med ens kolonner: søgefeltet fylder to, filtrene og sorteringen én hver. På mobil står filtrene bag en knap. -->
+          <div style="{{ filterGridStyle }}">
               <label for="fq" style="position: absolute; left: -9999px;">Søg i listen</label>
-              <input id="fq" type="search" value="{{ fq }}" onInput="{{ setFq }}" placeholder="{{ fqPlaceholder }}" style="flex: 1 1 260px; min-width: 0; font: 400 16px 'Roboto', Arial, sans-serif; padding: 9px 12px; border: 1px solid #C9D2CD; border-radius: 10px; background: #FFFFFF; color: #24312A;">
-              <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #50656E;">Sortér
-                <select id="fsort" value="{{ sortValue }}" onChange="{{ setFSort }}" style="{{ sortSelStyle }}">
-                  <template data-for="{{ sortOptions }}" data-as="o"><option value="{{ o.value }}">{{ o.label }}</option></template>
-                </select>
-              </label>
+              <input id="fq" type="search" value="{{ fq }}" onInput="{{ setFq }}" placeholder="{{ fqPlaceholder }}" style="grid-column: span 2; order: 0; box-sizing: border-box; width: 100%; min-width: 0; min-height: 42px; font: 400 16px 'Roboto', Arial, sans-serif; padding: 0 12px; border: 1px solid #C9D2CD; border-radius: 10px; background: #FFFFFF; color: #24312A;">
+              <select id="fsort" aria-label="Sortér" title="Sortér" value="{{ sortValue }}" onChange="{{ setFSort }}" style="{{ sortSelStyle }}">
+                <template data-for="{{ sortOptions }}" data-as="o"><option value="{{ o.value }}">{{ o.label }}</option></template>
+              </select>
               <template data-if="{{ narrow }}">
-                <button type="button" aria-expanded="{{ filtersOpenStr }}" onClick="{{ toggleFilters }}" style="min-height: 44px; padding: 0 14px; border: 1px solid #C9D2CD; border-radius: 10px; background: #FFFFFF; color: #24312A; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">{{ filterToggleLabel }}</button>
+                <button type="button" aria-expanded="{{ filtersOpenStr }}" onClick="{{ toggleFilters }}" style="order: 1; min-height: 44px; padding: 0 14px; border: 1px solid #C9D2CD; border-radius: 10px; background: #FFFFFF; color: #24312A; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">{{ filterToggleLabel }}</button>
               </template>
-            </div>
             <template data-if="{{ showFilterRow }}">
-              <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
                 <template data-if="{{ showTemaFilter }}">
                   <select id="ftema" aria-label="Tema" value="{{ fTema }}" onChange="{{ setFTema }}" style="{{ fTemaStyle }}">
                     <option value="">Alle temaer</option>
@@ -333,21 +329,22 @@ a{color:#0A602D}a:hover{color:#06401E}
                   <template data-for="{{ orgFilterOptions }}" data-as="o"><option value="{{ o.value }}">{{ o.label }}</option></template>
                 </select>
                 <select id="ftype" aria-label="Dokumenttype" value="{{ fType }}" onChange="{{ setFType }}" style="{{ fTypeStyle }}">
-                  <option value="">Alle dokumenttyper</option>
+                  <option value="">Alle typer</option>
                   <template data-for="{{ typeFilterOptions }}" data-as="o"><option value="{{ o.value }}">{{ o.label }}</option></template>
                 </select>
                 <select id="fyear" aria-label="Udgivelsesår" value="{{ fYear }}" onChange="{{ setFYear }}" style="{{ fYearStyle }}">
                   <option value="">Alle år</option>
                   <template data-for="{{ yearFilterOptions }}" data-as="o"><option value="{{ o.value }}">{{ o.label }}</option></template>
                 </select>
-                <template data-if="{{ hasActiveFilters }}">
-                  <button type="button" onClick="{{ clearFilters }}" style="min-height: 40px; padding: 0 6px; border: 0; background: none; color: #0A602D; font: 500 15px 'Roboto', Arial, sans-serif; text-decoration: underline; cursor: pointer;">Ryd filtre</button>
-                </template>
-              </div>
             </template>
           </div>
         </template>
-        <span style="font-size: 15px; color: #50656E;">{{ listCount }}</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline;">
+          <span style="font-size: 15px; color: #50656E;">{{ listCount }}</span>
+          <template data-if="{{ hasActiveFilters }}">
+            <button type="button" onClick="{{ clearFilters }}" style="padding: 0; border: 0; background: none; color: #0A602D; font: 500 15px 'Roboto', Arial, sans-serif; text-decoration: underline; cursor: pointer;">Ryd filtre</button>
+          </template>
+        </div>
         <div style="{{ listGridStyle }}">
           <template data-for="{{ listDocs }}" data-as="d">
             <button type="button" onClick="{{ d.open }}" style="{{ d.cardStyle }}">
