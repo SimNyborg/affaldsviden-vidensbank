@@ -9,7 +9,8 @@ class Component extends DCLogic {
       q: '', kq: '', variant: 'H', allUnits: false, allTemaer: false, narrowWin: false, menuOpen: false,
       aiOpen: p.startView === 'ask', aiAsked: p.startView === 'ask', aiQ: p.startView === 'ask' ? 'Hvad koster det at indsamle batterier?' : '',
       docAiId: '', docQ: '', docAsked: false,
-      upFiles: [], upOrg: '', upTema: '', upDesc: '', upName: '', upMail: '', upShare: false, upSent: false, upError: ''
+      upFiles: [], upOrg: '', upTema: '', upDesc: '', upName: '', upMail: '', upShare: false, upSent: false, upError: '',
+      fq: '', fTema: '', fOrg: '', fType: '', fYear: '', fSort: '', filtersOpen: false
     };
   }
   componentDidMount() {
@@ -205,7 +206,9 @@ class Component extends DCLogic {
     const serieHint = { gebyr: 'Klik på et år for at åbne gebyrbladet. Det nyeste står først.', reg: 'Klik på en vedtagelsesdato for at åbne regulativet. Den nyeste står først.', plan: 'Klik på en planperiode for at åbne planen. Den nyeste står først.' }[serie.id] || 'Klik på et år for at åbne rapporten. Det nyeste står først.';
 
     let listTitle = '', listDesc = '', listDocs = [], seeAlso = [], listTemaer = [];
-    const goTema = (name) => go({ view: 'tema', tema: name });
+    // Filtrene nulstilles, når man går ind på en liste forfra, men ikke når man går tilbage via brødkrummen
+    const FRESET = { fq: '', fTema: '', fOrg: '', fType: '', fYear: '', fSort: '', filtersOpen: false };
+    const goTema = (name) => go({ view: 'tema', tema: name, ...FRESET });
     const goSerie = (sid) => go({ view: 'serie', serie: sid, kq: '', allUnits: false, variant: 'H' });
     if (view === 'tema') {
       const t = TEMAER.find((x) => x.name === st.tema) || TEMAER[0];
@@ -238,7 +241,33 @@ class Component extends DCLogic {
       }
       listDocs = fast.concat(VIDEN.filter((d) => hit(d.title + ' ' + d.org + ' ' + d.type + ' ' + d.temaer.join(' ') + ' ' + d.res)));
     }
-    if (view === 'tema' || view === 'alle') listDocs.sort((a, b) => (b.year - a.year) || a.title.localeCompare(b.title, 'da'));
+    // Søgning, filtre og sortering øverst på Alle dokumenter og temasiderne
+    const showFilters = view === 'tema' || view === 'alle';
+    const base = listDocs;
+    const fWords = st.fq.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const textOf = (d) => (d.title + ' ' + d.org + ' ' + d.type + ' ' + d.temaer.join(' ') + ' ' + d.res + ' ' + (d.long || '')).toLowerCase();
+    const sortValue = st.fSort || (fWords.length ? 'match' : 'nyeste');
+    const activeCount = [st.fTema && view !== 'tema', st.fOrg, st.fType, st.fYear].filter(Boolean).length;
+    if (showFilters) {
+      const score = (d) => fWords.reduce((s, w) => s + (d.title.toLowerCase().includes(w) ? 3 : 0) + (d.temaer.join(' ').toLowerCase().includes(w) ? 2 : 0) + textOf(d).split(w).length - 1, 0);
+      const added = (d) => VIDEN.findIndex((x) => x.id === d.id);
+      const byTitle = (a, b) => a.title.localeCompare(b.title, 'da');
+      const cmp = {
+        nyeste: (a, b) => (b.year - a.year) || byTitle(a, b),
+        aeldste: (a, b) => (a.year - b.year) || byTitle(a, b),
+        tilfoejet: (a, b) => added(a) - added(b),
+        titel: byTitle,
+        udgiver: (a, b) => a.org.localeCompare(b.org, 'da') || (b.year - a.year),
+        match: (a, b) => (score(b) - score(a)) || (b.year - a.year)
+      }[sortValue];
+      listDocs = base.filter((d) => (view === 'tema' || !st.fTema || d.temaer.includes(st.fTema)) && (!st.fOrg || d.org === st.fOrg)
+        && (!st.fType || d.type === st.fType) && (!st.fYear || String(d.year) === st.fYear) && fWords.every((w) => textOf(d).includes(w))).sort(cmp);
+    }
+    const countOpts = (vals) => Object.entries(vals.reduce((m, v) => { m[v] = (m[v] || 0) + 1; return m; }, {}));
+    const optList = (vals, sorter) => countOpts(vals).sort(sorter || ((a, b) => a[0].localeCompare(b[0], 'da'))).map(([v, n]) => ({ value: v, label: v + ' (' + n + ')' }));
+    const fSelBase = (on) => 'min-height: 40px; font: 400 15px "Roboto", Arial, sans-serif; padding: 0 10px; border-radius: 10px; color: #24312A; min-width: 0; max-width: 100%; cursor: pointer; '
+      + (on ? 'border: 1px solid #0A602D; background: #E6F4EA;' : 'border: 1px solid #C9D2CD; background: #FFFFFF;');
+    const fSel = (on) => (narrow ? 'flex: 1 1 calc(50% - 4px); ' : 'flex: 0 1 210px; ') + fSelBase(on);
     const isList = ['tema', 'alle', 'search'].includes(view);
 
     // Dokumentside
@@ -298,21 +327,48 @@ class Component extends DCLogic {
     const seg = (on) => 'min-height: 40px; padding: 0 14px; border: 0; border-radius: 8px; cursor: pointer; font: 500 15px "Roboto", Arial, sans-serif; ' + (on ? 'background: #0A602D; color: #FFFFFF;' : 'background: transparent; color: #24312A;');
     const newest = VIDEN.filter((d) => d.img).slice(0, 10).map((d) => ({ ...d, meta: d.org + ' · ' + d.year, open: openDoc(d) }));
     const heroFull = view === 'home' || view === 'search';
+    // På forsiden fylder toppen skærmen (minus menuen), med formålet nederst og en pil ned til indholdet. Ved søgning er den lav.
+    const heroTall = view === 'home';
     const docAi = !!doc && st.docAiId === st.docId;
     return {
       wide: !narrow, narrow,
       mobileMenu: narrow && st.menuOpen, menuOpenStr: String(narrow && st.menuOpen), menuLabel: st.menuOpen ? 'Luk' : 'Menu',
       toggleMenu: () => this.setState({ menuOpen: !st.menuOpen }),
-      heroFull, heroAi: heroFull && st.aiOpen,
-      heroInnerStyle: 'max-width: 1180px; margin: 0 auto; padding: ' + (heroFull ? '44px max(16px, 3vw) 40px' : '18px max(16px, 3vw) 16px') + '; display: flex; flex-direction: column; gap: 14px;',
-      heroH1Style: 'margin: 0; font-family: \'Anton\', \'Arial Narrow\', Arial, sans-serif; font-weight: 400; font-size: ' + (heroFull ? 'clamp(40px, 6.5vw, 68px)' : 'clamp(28px, 3.5vw, 36px)') + '; line-height: 1; letter-spacing: 0.02em;',
+      heroFull, heroTall, heroArrow: heroTall && !narrow, heroAi: heroFull && st.aiOpen,
+      heroInnerStyle: 'max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; position: relative; '
+        + (heroTall ? 'gap: 28px; padding: 40px max(16px, 3vw) 28px; min-height: calc(100vh - 137px); min-height: min(calc(100svh - 137px), 900px);' : 'gap: 14px; padding: 44px max(16px, 3vw) 40px;'),
+      heroMainStyle: 'display: flex; flex-direction: column; gap: 14px;' + (heroTall ? ' margin-block: auto;' : ''),
+      omPanelStyle: 'display: flex; flex-wrap: wrap; gap: 14px 36px; align-items: flex-start; padding: 18px 22px; border-radius: 15px; background: rgba(4, 34, 17, 0.58); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);'
+        + (narrow ? '' : ' max-width: 980px; margin-right: 76px;'),
+      // Blød rulning, og et direkte hop bagefter, hvis browseren ikke ruller blødt
+      scrollDown: () => { try {
+        const el = document.getElementById('vb-indhold'); if (!el) return;
+        const y0 = window.scrollY; el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => { if (window.scrollY === y0) el.scrollIntoView({ block: 'start' }); }, 350);
+      } catch (e) {} },
+      heroH1Style: 'margin: 0; font-family: \'Anton\', \'Arial Narrow\', Arial, sans-serif; font-weight: 400; font-size: ' + (heroTall ? 'clamp(48px, 8vw, 92px)' : 'clamp(40px, 6.5vw, 68px)') + '; line-height: 1; letter-spacing: 0.02em;',
       docAi, docAiStr: String(docAi),
-      goHome: go({ view: 'home' }), goAlle: go({ view: 'alle' }), goIndsend: go({ view: 'indsend', upSent: false, upError: '' }),
+      goHome: go({ view: 'home' }), goAlle: go({ view: 'alle', ...FRESET }),
+      showFilters, showTemaFilter: view === 'alle', showFilterRow: !narrow || st.filtersOpen,
+      fq: st.fq, setFq: (e) => this.setState({ fq: e.target.value }), fqPlaceholder: view === 'tema' ? 'Søg i ' + listTitle : 'Søg i alle dokumenter',
+      sortValue, setFSort: (e) => this.setState({ fSort: e.target.value }), sortSelStyle: fSelBase(false),
+      sortOptions: (fWords.length ? [{ value: 'match', label: 'Bedst match' }] : []).concat([
+        { value: 'nyeste', label: 'Nyeste først' }, { value: 'aeldste', label: 'Ældste først' }, { value: 'tilfoejet', label: 'Senest tilføjet' },
+        { value: 'titel', label: 'Titel A-Å' }, { value: 'udgiver', label: 'Udgiver A-Å' }]),
+      fTema: st.fTema, setFTema: (e) => this.setState({ fTema: e.target.value }), fTemaStyle: fSel(!!st.fTema),
+      temaFilterOptions: optList(base.flatMap((d) => d.temaer)),
+      fOrg: st.fOrg, setFOrg: (e) => this.setState({ fOrg: e.target.value }), fOrgStyle: fSel(!!st.fOrg), orgFilterOptions: optList(base.map((d) => d.org)),
+      fType: st.fType, setFType: (e) => this.setState({ fType: e.target.value }), fTypeStyle: fSel(!!st.fType), typeFilterOptions: optList(base.map((d) => d.type)),
+      fYear: st.fYear, setFYear: (e) => this.setState({ fYear: e.target.value }), fYearStyle: fSel(!!st.fYear),
+      yearFilterOptions: optList(base.map((d) => String(d.year)), (a, b) => b[0].localeCompare(a[0])),
+      hasActiveFilters: activeCount > 0 || fWords.length > 0, clearFilters: () => this.setState({ fq: '', fTema: '', fOrg: '', fType: '', fYear: '', fSort: '' }),
+      filtersOpenStr: String(st.filtersOpen), toggleFilters: () => this.setState({ filtersOpen: !st.filtersOpen }),
+      filterToggleLabel: 'Filtre' + (activeCount ? ' (' + activeCount + ')' : ''), goIndsend: go({ view: 'indsend', upSent: false, upError: '' }),
       isIndsend: view === 'indsend', upNotSent: view === 'indsend' && !st.upSent, upSent: view === 'indsend' && st.upSent,
       setUpFiles: (e) => this.setState({ upFiles: e.target.files ? Array.from(e.target.files).map((x) => x.name) : [], upError: '' }),
       upHasFiles: nUp > 0, upFileNames: st.upFiles.join(', '),
       upOrg: st.upOrg, setUpOrg: (e) => this.setState({ upOrg: e.target.value }),
-      setUpTema: (e) => this.setState({ upTema: e.target.value }), temaOptions: TEMAER.map((t) => ({ name: t.name })).sort((a, b) => a.name.localeCompare(b.name, 'da')),
+      upTema: st.upTema, setUpTema: (e) => this.setState({ upTema: e.target.value }), temaOptions: TEMAER.map((t) => ({ name: t.name })).sort((a, b) => a.name.localeCompare(b.name, 'da')),
       upDesc: st.upDesc, setUpDesc: (e) => this.setState({ upDesc: e.target.value }),
       upName: st.upName, setUpName: (e) => this.setState({ upName: e.target.value }),
       upMail: st.upMail, setUpMail: (e) => this.setState({ upMail: e.target.value }),
@@ -341,7 +397,8 @@ class Component extends DCLogic {
       temaSmallStyle: tileStyle({}),
       temaPillStyle: 'display: inline-flex; align-items: center; min-height: ' + (narrow ? '44px' : '36px') + '; padding: 0 12px; border-radius: 8px; border: 1px solid #DAE0E0; background: #F4F6F2; color: #24312A; font: 500 14px "Roboto", Arial, sans-serif; cursor: pointer;',
       hasListTemaer: listTemaer.length > 0, listTemaer,
-      emptyText: view === 'tema' ? 'Prototypen har endnu ingen eksempler under dette tema. I den færdige vidensbank ligger temaets dokumenter her.' : 'Ingen dokumenter passer til søgningen.',
+      emptyText: showFilters && base.length ? 'Ingen dokumenter passer til søgningen eller filtrene. Prøv at fjerne et filter.'
+        : view === 'tema' ? 'Prototypen har endnu ingen eksempler under dette tema. I den færdige vidensbank ligger temaets dokumenter her.' : 'Ingen dokumenter passer til søgningen.',
       newest,
       serie: { ...serie, ready: !serie.proposal, proposal: !!serie.proposal, hasVariant: !!serie.variant, findLabel: serie.unit === 'selskab' ? 'Find selskab' : 'Find kommune', unitLabel: serie.unit === 'selskab' ? 'Selskab' : 'Kommune', unitWord: serie.unit },
       kq: st.kq, setKq: (e) => this.setState({ kq: e.target.value }),
@@ -352,7 +409,7 @@ class Component extends DCLogic {
       listTitle, listDesc, listDocs: listDocs.map(toRow), listEmpty: isList && listDocs.length === 0,
       listGridStyle: 'display: grid; grid-template-columns: ' + (narrow ? '1fr' : 'repeat(auto-fill, minmax(min(225px, 100%), 1fr))') + '; gap: ' + (narrow ? '12px' : '20px') + ';',
       newestCardStyle: 'display: flex; flex-direction: column; width: ' + (narrow ? '220px' : '240px') + '; padding: 0; border: 1px solid #DAE0E0; border-radius: 15px; overflow: hidden; background: #FFFFFF; text-align: left; cursor: pointer; font: inherit; color: inherit;',
-      listCount: listDocs.length + (listDocs.length === 1 ? ' dokument' : ' dokumenter'),
+      listCount: (showFilters && listDocs.length < base.length ? listDocs.length + ' af ' + base.length : String(listDocs.length)) + (base.length === 1 ? ' dokument' : ' dokumenter'),
       hasSeeAlso: seeAlso.length > 0, seeAlso,
       doc: docVals
     };

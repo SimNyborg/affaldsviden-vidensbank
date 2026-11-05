@@ -36,7 +36,8 @@
       }
       return;
     }
-    var el = document.createElement(n.tagName.toLowerCase());
+    // Samme navnerum som i skabelonen, så svg-ikoner bliver tegnet
+    var el = document.createElementNS(n.namespaceURI, n.localName);
     var textValue = null;
     for (var j = 0; j < n.attributes.length; j++) {
       var a = n.attributes[j];
@@ -47,7 +48,7 @@
         continue;
       }
       var val = fill(a.value, scope);
-      if (a.name === 'value' && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) { textValue = val; continue; }
+      if (a.name === 'value' && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT')) { textValue = val; continue; }
       el.setAttribute(a.name, val);
     }
     if (el.tagName === 'A' && el.getAttribute('href') === '#') el.addEventListener('click', function (e) { e.preventDefault(); });
@@ -69,14 +70,13 @@
     var lastKey = '';
     var queued = false;
     function render() {
-      // Bevar fokus, markering, afkrydsninger og valg, når siden tegnes igen
+      // Bevar fokus, markering og afkrydsninger, når siden tegnes igen. Valg i rullemenuer kommer fra tilstanden (value).
       var act = document.activeElement;
       var id = act && act.id && root.contains(act) ? act.id : '';
       var sel = id && typeof act.selectionStart === 'number' ? [act.selectionStart, act.selectionEnd] : null;
       var keep = {};
-      Array.prototype.forEach.call(root.querySelectorAll('input[id], select[id]'), function (x) {
+      Array.prototype.forEach.call(root.querySelectorAll('input[id]'), function (x) {
         if (x.type === 'checkbox') keep[x.id] = { checked: x.checked };
-        else if (x.tagName === 'SELECT') keep[x.id] = { value: x.value };
       });
       var scrollers = Array.prototype.map.call(root.querySelectorAll('[data-scroll]'), function (x) { return x.scrollLeft; });
       var frag = document.createDocumentFragment();
