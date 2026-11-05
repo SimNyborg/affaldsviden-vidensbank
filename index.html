@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Vidensbank · designforslag</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@400;500;700&display=swap">
+<style>
+body{margin:0}
+a{color:#0A602D}a:hover{color:#06401E}
+.vb-hero{background-color:#0A602D;background-image:linear-gradient(90deg,rgba(6,64,30,.9) 0%,rgba(6,64,30,.75) 40%,rgba(6,64,30,.1) 72%),url(img/f0ef4424257a621daa0374b68909b5bd.jpg);background-size:cover;background-position:center 62%}
+@media (max-width:720px){.vb-hero{background-image:linear-gradient(rgba(6,64,30,.8),rgba(6,64,30,.8)),url(img/f0ef4424257a621daa0374b68909b5bd.jpg);background-position:58% 62%}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<template id="vb-skabelon">
+<div style="background: #FFFFFF; color: #24312A; font-family: 'Roboto', Arial, sans-serif; font-size: 16px; line-height: 1.5; min-height: 1400px;">
+
+  <header style="background: #FFFFFF; border-bottom: 1px solid #DAE0E0;">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 12px max(16px, 3vw); display: flex; align-items: center; gap: 28px;">
+      <a href="#" style="text-decoration: none; font-weight: 700; font-size: 24px; color: #0A602D; letter-spacing: -0.01em;">Affaldsviden</a>
+      <template data-if="{{ wide }}">
+        <nav aria-label="Hovedmenu" style="margin-left: auto; display: flex; flex-wrap: wrap; gap: 22px; font-size: 15px;">
+          <a href="#" style="color: #24312A; text-decoration: none;">Om</a>
+          <a href="#" style="color: #24312A; text-decoration: none;">Netværk</a>
+          <a href="#" style="color: #24312A; text-decoration: none;">Nyheder</a>
+          <a href="#" style="color: #24312A; text-decoration: none;">Affaldsfeed</a>
+          <a href="#" style="color: #24312A; text-decoration: none;">For alle</a>
+          <a href="#" style="color: #24312A; text-decoration: none;">Min kommune</a>
+        </nav>
+      </template>
+      <template data-if="{{ narrow }}">
+        <button type="button" aria-expanded="{{ menuOpenStr }}" onClick="{{ toggleMenu }}" style="margin-left: auto; min-width: 44px; min-height: 44px; padding: 0 12px; border: 1px solid #DAE0E0; border-radius: 10px; background: #FFFFFF; color: #24312A; font: 500 14px 'Roboto', Arial, sans-serif; cursor: pointer;">{{ menuLabel }}</button>
+      </template>
+    </div>
+    <template data-if="{{ mobileMenu }}">
+      <nav aria-label="Hovedmenu" style="display: flex; flex-direction: column; padding: 0 max(16px, 3vw) 12px; font-size: 16px;">
+        <a href="#" style="display: flex; align-items: center; min-height: 44px; color: #24312A; text-decoration: none; border-top: 1px solid #DAE0E0;">Om</a>
+        <a href="#" style="display: flex; align-items: center; min-height: 44px; color: #24312A; text-decoration: none; border-top: 1px solid #DAE0E0;">Netværk</a>
+        <a href="#" style="display: flex; align-items: center; min-height: 44px; color: #24312A; text-decoration: none; border-top: 1px solid #DAE0E0;">Nyheder</a>
+        <a href="#" style="display: flex; align-items: center; min-height: 44px; color: #24312A; text-decoration: none; border-top: 1px solid #DAE0E0;">Affaldsfeed</a>
+        <a href="#" style="display: flex; align-items: center; min-height: 44px; color: #24312A; text-decoration: none; border-top: 1px solid #DAE0E0;">For alle</a>
+        <a href="#" style="display: flex; align-items: center; min-height: 44px; color: #24312A; text-decoration: none; border-top: 1px solid #DAE0E0;">Min kommune</a>
+      </nav>
+    </template>
+  </header>
+
+  <!-- Toppen med billede og søgefelt vises kun på forsiden og ved søgning. Undersiderne starter direkte med brødkrummen. -->
+  <template data-if="{{ heroFull }}">
+  <section class="vb-hero" style="color: #FFFFFF;">
+    <div style="{{ heroInnerStyle }}">
+      <h1 style="{{ heroH1Style }}"><a href="#" onClick="{{ goHome }}" style="color: #FFFFFF; text-decoration: none;">VIDENSBANK</a></h1>
+      <template data-if="{{ heroFull }}">
+      <p style="margin: 0; max-width: 520px; font-size: 17px; color: #FFFFFF;">Del viden med hinanden på affaldsområdet.</p>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; max-width: 620px;">
+        <label for="q" style="position: absolute; left: -9999px;">Søg i vidensbanken</label>
+        <input id="q" type="search" value="{{ q }}" onInput="{{ setQ }}" placeholder="Søg efter dokument, emne eller kommune" style="flex: 1 1 260px; min-width: 0; font: inherit; font-size: 17px; padding: 14px 16px; border: 0; border-radius: 10px; background: #FFFFFF; color: #24312A;">
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <button type="button" aria-expanded="{{ aiOpenStr }}" onClick="{{ toggleAi }}" style="min-height: 40px; padding: 0 14px; border: 1px solid #FFFFFF; border-radius: 999px; background: transparent; color: #FFFFFF; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">{{ aiToggleLabel }}</button>
+        <button type="button" onClick="{{ goIndsend }}" style="min-height: 40px; padding: 0 14px; border: 1px solid #FFFFFF; border-radius: 999px; background: transparent; color: #FFFFFF; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">Indsend dokumenter</button>
+      </div>
+      </template>
+      <template data-if="{{ heroAi }}">
+        <div style="max-width: 620px; display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 15px; background: #FFFFFF; color: #24312A; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);">
+          <label for="aiq" style="font-weight: 700;">Spørg AI om vidensbankens dokumenter</label>
+          <textarea id="aiq" rows="2" value="{{ aiQ }}" onInput="{{ setAiQ }}" placeholder="Fx: Hvad koster det at indsamle batterier?" style="font: inherit; padding: 10px 12px; border: 1px solid #A9B5B0; border-radius: 10px; resize: vertical; color: #24312A;"></textarea>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+            <button type="button" onClick="{{ askNow }}" style="min-height: 44px; padding: 0 20px; border: 0; border-radius: 10px; background: #0A602D; color: #FFFFFF; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">Spørg</button>
+            <span style="font-size: 13px; color: #50656E;">Svarer kun ud fra dokumenterne i vidensbanken og viser kilderne.</span>
+          </div>
+          <template data-if="{{ aiAsked }}">
+            <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid #DAE0E0;">
+              <p style="margin: 0;">{{ aiAnswer }}</p>
+              <template data-if="{{ aiHasSources }}">
+                <div style="display: flex; flex-direction: column; gap: 2px; font-size: 14px;">
+                  <span style="color: #50656E;">Kilder</span>
+                  <template data-for="{{ aiSources }}" data-as="s">
+                    <button type="button" onClick="{{ s.open }}" style="align-self: flex-start; min-height: 32px; padding: 0; border: 0; background: none; text-align: left; cursor: pointer; font: inherit; color: #0A602D; text-decoration: underline;">{{ s.label }}</button>
+                  </template>
+                </div>
+              </template>
+              <span style="font-size: 12px; color: #50656E;">Eksempel på svar i prototypen.</span>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+  </section>
+  </template>
+
+  <main style="max-width: 1180px; margin: 0 auto; padding: 24px max(16px, 3vw) 56px; display: flex; flex-direction: column; gap: 36px;">
+
+    <template data-if="{{ hasCrumb }}">
+      <nav aria-label="Brødkrumme" style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 15px; color: #50656E; margin-bottom: -16px;">
+        <a href="#" onClick="{{ goHome }}">Vidensbank</a>
+        <span aria-hidden="true">›</span>
+        <template data-if="{{ hasCrumbMid }}"><a href="#" onClick="{{ crumbMid.go }}">{{ crumbMid.label }}</a><span aria-hidden="true">›</span></template>
+        <span>{{ crumbHere }}</span>
+      </nav>
+    </template>
+
+    <!-- FORSIDE -->
+    <template data-if="{{ isHome }}">
+      <section style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #0A602D;">Faste dokumenter</h2>
+          <p style="margin: 0; color: #50656E;">Dokumenter, som alle kommuner og affaldsselskaber opdaterer jævnligt.</p>
+        </div>
+        <div style="{{ temaGridStyle }}">
+          <template data-for="{{ serieTiles }}" data-as="s">
+            <button type="button" title="{{ s.desc }}" onClick="{{ s.go }}" style="{{ s.style }}"><span>{{ s.short }}</span><template data-if="{{ s.proposal }}"><span style="font-weight: 400; font-size: 13px; color: #50656E;">Forslag</span></template></button>
+          </template>
+        </div>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #0A602D;">Temaer</h2>
+          <p style="margin: 0; color: #50656E;">Find dokumenter om et bestemt emne.</p>
+        </div>
+        <div style="{{ temaGridStyle }}">
+          <template data-for="{{ temaTiles }}" data-as="t">
+            <button type="button" title="{{ t.desc }}" onClick="{{ t.go }}" style="{{ temaSmallStyle }}">{{ t.name }}</button>
+          </template>
+        </div>
+        <template data-if="{{ allTemaer }}">
+          <div style="{{ temaGridStyle }}">
+            <template data-for="{{ moreTemaer }}" data-as="t">
+              <button type="button" title="{{ t.desc }}" onClick="{{ t.go }}" style="{{ temaSmallStyle }}">{{ t.name }}</button>
+            </template>
+          </div>
+        </template>
+        <button type="button" aria-expanded="{{ allTemaerStr }}" onClick="{{ toggleTemaer }}" style="align-self: flex-start; min-height: 44px; padding: 0 18px; border: 1px solid #0A602D; border-radius: 10px; background: #FFFFFF; color: #0A602D; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">{{ temaToggleLabel }}</button>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; justify-content: space-between;">
+          <h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #0A602D;">Nyeste dokumenter</h2>
+          <button type="button" onClick="{{ goAlle }}" style="min-height: 44px; padding: 0 18px; border: 1px solid #0A602D; border-radius: 10px; background: #FFFFFF; color: #0A602D; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">Vis alle dokumenter</button>
+        </div>
+        <div data-scroll style="overflow-x: auto; padding-bottom: 8px;">
+          <div style="display: flex; gap: 16px; width: max-content;">
+            <template data-for="{{ newest }}" data-as="d">
+              <button type="button" onClick="{{ d.open }}" style="{{ newestCardStyle }}">
+                <span style="display: block; width: 100%; aspect-ratio: 210 / 297; overflow: hidden; background: #F4F6F2; border-bottom: 1px solid #DAE0E0;"><img src="{{ d.img }}" alt="" style="width: 100%; height: 100%; object-fit: contain; object-position: center; display: block;"></span>
+                <span style="display: flex; flex-direction: column; gap: 6px; padding: 12px 14px 14px;">
+                  <span style="font-weight: 700; font-size: 15px; line-height: 1.3; min-height: 2.6em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ d.title }}</span>
+                  <span style="font-size: 14px; line-height: 1.45; color: #3D5246; min-height: 7.25em; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;">{{ d.res }}</span>
+                  <span style="margin-top: auto; font-size: 13px; color: #50656E;">{{ d.meta }}</span>
+                </span>
+              </button>
+            </template>
+          </div>
+        </div>
+      </section>
+
+      <section style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; padding: 24px max(18px, 2.5vw); border-radius: 15px; background: #E6F4EA;">
+        <div style="flex: 2 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 8px;">
+          <h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #0A602D;">Om vidensbanken</h2>
+          <p style="margin: 0; max-width: 680px;">Formålet med Vidensbanken er at dele viden med hinanden på affaldsområdet. Vidensbanken indeholder en række dokumenter fra de kommuner og affaldsselskaber, som deltager i Affaldsviden.dk. Vidensbanken indeholder interne notater, undersøgelser, konsulentrapporter, kommunikationsmateriale og andre dokumenter, som I kan lade jer inspirere af.</p>
+        </div>
+        <div style="flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: 15px; border: 1px solid #9CC9AA; background: #FFFFFF;">
+          <h3 style="margin: 0; font-size: 18px; color: #24312A;">Bidrag til vidensdelingen</h3>
+          <p style="margin: 0;">Send dokumenter til <b style="user-select: all;">jhn@jhn.dk</b>, eller indsend dine dokumenter her.</p>
+          <button type="button" onClick="{{ goIndsend }}" style="align-self: flex-start; min-height: 44px; padding: 0 20px; border: 0; border-radius: 10px; background: #0A602D; color: #FFFFFF; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">Indsend dokumenter</button>
+        </div>
+      </section>
+    </template>
+
+    <!-- INDSEND DOKUMENTER -->
+    <template data-if="{{ isIndsend }}">
+      <section style="display: flex; flex-direction: column; gap: 14px; max-width: 820px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <h2 style="margin: 0; font-size: clamp(26px, 3.5vw, 34px); font-weight: 700; color: #0A602D;">Indsend dokumenter</h2>
+          <p style="margin: 0; color: #50656E;">Del interne notater, undersøgelser, konsulentrapporter, kommunikationsmateriale og andre dokumenter med de kommuner og affaldsselskaber, der deltager i Affaldsviden.dk. Du kan også sende dem til <b style="color: #24312A; user-select: all;">jhn@jhn.dk</b>.</p>
+        </div>
+        <template data-if="{{ upNotSent }}">
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 18px; border: 1px solid #DAE0E0; border-radius: 15px; background: #FFFFFF;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-weight: 700;">Dokumenter</span>
+              <label for="upfiles" style="display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; min-height: 56px; padding: 10px 16px; border: 2px dashed #9CC9AA; border-radius: 12px; background: #F4F6F2; cursor: pointer;">
+                <span style="display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 8px; background: #0A602D; color: #FFFFFF; font-weight: 500;">Vælg filer</span>
+                <span style="font-size: 14px; color: #50656E;">PDF, Word, Excel eller PowerPoint. Du kan vælge flere på én gang.</span>
+                <input id="upfiles" type="file" multiple onChange="{{ setUpFiles }}" style="position: absolute; left: -9999px;">
+              </label>
+              <template data-if="{{ upHasFiles }}">
+                <span style="font-size: 14px; color: #24312A;">Valgt: {{ upFileNames }}</span>
+              </template>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 12px 16px; align-items: end;">
+              <label style="display: flex; flex-direction: column; gap: 4px; font-weight: 700;"><span>Kommune eller affaldsselskab</span>
+                <input id="uporg" type="text" value="{{ upOrg }}" onInput="{{ setUpOrg }}" style="font: 400 16px 'Roboto', Arial, sans-serif; padding: 9px 12px; border: 1px solid #A9B5B0; border-radius: 10px; color: #24312A; min-width: 0;">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 4px; font-weight: 700;"><span>Tema <span style="font-weight: 400; color: #50656E;">(valgfrit)</span></span>
+                <select id="uptema" onChange="{{ setUpTema }}" style="font: 400 16px 'Roboto', Arial, sans-serif; padding: 9px 12px; border: 1px solid #A9B5B0; border-radius: 10px; color: #24312A; background: #FFFFFF; min-width: 0;">
+                  <option value="">Vælg tema</option>
+                  <template data-for="{{ temaOptions }}" data-as="o"><option value="{{ o.name }}">{{ o.name }}</option></template>
+                </select>
+              </label>
+            </div>
+            <label style="display: flex; flex-direction: column; gap: 4px; font-weight: 700;"><span>Kort beskrivelse <span style="font-weight: 400; color: #50656E;">(valgfrit)</span></span>
+              <textarea id="updesc" rows="2" value="{{ upDesc }}" onInput="{{ setUpDesc }}" placeholder="Hvad handler dokumentet om, og hvad kan andre bruge det til?" style="font: 400 16px 'Roboto', Arial, sans-serif; padding: 9px 12px; border: 1px solid #A9B5B0; border-radius: 10px; color: #24312A; resize: vertical;"></textarea>
+            </label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 12px 16px; align-items: end;">
+              <label style="display: flex; flex-direction: column; gap: 4px; font-weight: 700;"><span>Dit navn</span>
+                <input id="upname" type="text" value="{{ upName }}" onInput="{{ setUpName }}" style="font: 400 16px 'Roboto', Arial, sans-serif; padding: 9px 12px; border: 1px solid #A9B5B0; border-radius: 10px; color: #24312A; min-width: 0;">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 4px; font-weight: 700;"><span>Din e-mail</span>
+                <input id="upmail" type="email" value="{{ upMail }}" onInput="{{ setUpMail }}" style="font: 400 16px 'Roboto', Arial, sans-serif; padding: 9px 12px; border: 1px solid #A9B5B0; border-radius: 10px; color: #24312A; min-width: 0;">
+              </label>
+            </div>
+            <template data-if="{{ upHasError }}">
+              <p role="alert" style="margin: 0; padding: 8px 12px; border-radius: 10px; background: #FFF4E0; color: #5C3A00;">{{ upError }}</p>
+            </template>
+            <div style="display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between;">
+              <label style="flex: 1 1 320px; min-width: 0; display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 15px;">
+                <input id="upshare" type="checkbox" onChange="{{ setUpShare }}" style="width: 20px; height: 20px; margin: 1px 0 0; accent-color: #0A602D; flex: none;">
+                <span>Dokumenterne må deles med de kommuner og affaldsselskaber, der deltager i Affaldsviden.dk.</span>
+              </label>
+              <button type="button" onClick="{{ sendUp }}" style="min-height: 44px; padding: 0 28px; border: 0; border-radius: 10px; background: #0A602D; color: #FFFFFF; font: 500 16px 'Roboto', Arial, sans-serif; cursor: pointer;">Indsend</button>
+            </div>
+          </div>
+        </template>
+        <template data-if="{{ upSent }}">
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: 15px; background: #E6F4EA;">
+            <h3 style="margin: 0; font-size: 20px; color: #0A602D;">Tak for dit bidrag</h3>
+            <p style="margin: 0;">{{ upThanks }}</p>
+            <span style="font-size: 13px; color: #50656E;">I prototypen bliver intet sendt.</span>
+            <button type="button" onClick="{{ goHome }}" style="align-self: flex-start; min-height: 44px; padding: 0 20px; border: 1px solid #0A602D; border-radius: 10px; background: #FFFFFF; color: #0A602D; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">Tilbage til vidensbanken</button>
+          </div>
+        </template>
+      </section>
+    </template>
+
+    <!-- UNDERSIDE FOR FASTE DOKUMENTER -->
+    <template data-if="{{ isSerie }}">
+      <section style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <h2 style="margin: 0; font-size: clamp(26px, 3.5vw, 34px); font-weight: 700; color: #0A602D;">{{ serieHeading }}</h2>
+        </div>
+        <template data-if="{{ serie.ready }}">
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+            <label for="kq" style="position: absolute; left: -9999px;">{{ serie.findLabel }}</label>
+            <input id="kq" type="search" value="{{ kq }}" onInput="{{ setKq }}" placeholder="{{ serie.findLabel }}" style="flex: 0 1 320px; min-width: 0; font: inherit; padding: 11px 14px; border: 1px solid #A9B5B0; border-radius: 10px; background: #FFFFFF; color: #24312A;">
+            <template data-if="{{ serie.hasVariant }}">
+              <div style="display: flex; gap: 4px; padding: 4px; border-radius: 10px; background: #F4F6F2;" role="group" aria-label="Variant">
+                <button type="button" aria-pressed="{{ hOn }}" onClick="{{ setH }}" style="{{ hStyle }}">Husholdning</button>
+                <button type="button" aria-pressed="{{ eOn }}" onClick="{{ setE }}" style="{{ eStyle }}">Erhverv</button>
+              </div>
+            </template>
+          </div>
+          <p style="margin: 0; font-size: 14px; color: #50656E;">{{ serieHint }}</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr)); gap: 12px;">
+            <template data-for="{{ rows }}" data-as="r">
+              <div style="{{ r.cardStyle }}">
+                <span style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;"><b style="font-size: 16px;">{{ r.unit }}</b><template data-if="{{ r.mine }}"><span style="font-size: 13px; color: #0A602D;">Din kommune</span></template></span>
+                <span style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  <template data-for="{{ r.chips }}" data-as="c">
+                    <button type="button" title="{{ c.title }}" onClick="{{ c.open }}" style="{{ c.style }}">{{ c.label }}</button>
+                  </template>
+                </span>
+              </div>
+            </template>
+          </div>
+          <template data-if="{{ noUnitHit }}">
+            <p style="margin: 0; padding: 18px 20px; border-radius: 15px; background: #F4F6F2; color: #50656E; max-width: 720px;">{{ noUnitText }}</p>
+          </template>
+          <template data-if="{{ hasEmpty }}">
+            <p style="margin: 0; font-size: 14px; color: #50656E;"><b style="color: #24312A;">Endnu uden dokumenter:</b> {{ emptyUnits }}</p>
+          </template>
+          <template data-if="{{ hasMoreUnits }}">
+            <button type="button" onClick="{{ showAllUnits }}" style="align-self: center; min-height: 44px; padding: 0 22px; border: 0; border-radius: 10px; background: #0A602D; color: #FFFFFF; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">{{ moreUnitsLabel }}</button>
+          </template>
+        </template>
+        <template data-if="{{ serie.proposal }}">
+          <p style="margin: 0; padding: 18px 20px; border-radius: 15px; background: #F4F6F2; max-width: 720px;">Forslag til en ny fast dokumenttype. Den bygges op som gebyrbladene med ét kort pr. {{ serie.unitWord }} og udgaverne vist med den nyeste først, når dokumenterne er samlet ind.</p>
+        </template>
+      </section>
+    </template>
+
+    <!-- TEMA, ALLE DOKUMENTER, SØGNING OG AI-SVAR: samme enkle liste -->
+    <template data-if="{{ isList }}">
+      <section style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <h2 style="margin: 0; font-size: clamp(26px, 3.5vw, 34px); font-weight: 700; color: #0A602D;">{{ listTitle }}</h2>
+          <template data-if="{{ listDesc }}"><p style="margin: 0; color: #50656E; max-width: 720px;">{{ listDesc }}</p></template>
+        </div>
+        <template data-if="{{ hasSeeAlso }}">
+          <p style="margin: 0;">Se også <template data-for="{{ seeAlso }}" data-as="sa">{{ sa.pre }}<button type="button" onClick="{{ sa.go }}" style="padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: #0A602D; text-decoration: underline;">{{ sa.name }}</button></template> under faste dokumenter.</p>
+        </template>
+        <template data-if="{{ hasListTemaer }}">
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+            <span style="font-size: 15px; color: #50656E;">Gå til:</span>
+            <template data-for="{{ listTemaer }}" data-as="t">
+              <button type="button" onClick="{{ t.go }}" style="{{ temaPillStyle }}">{{ t.name }}</button>
+            </template>
+          </div>
+        </template>
+        <span style="font-size: 15px; color: #50656E;">{{ listCount }}</span>
+        <div style="{{ listGridStyle }}">
+          <template data-for="{{ listDocs }}" data-as="d">
+            <button type="button" onClick="{{ d.open }}" style="{{ d.cardStyle }}">
+              <span style="{{ d.coverStyle }}">
+                <template data-if="{{ d.img }}"><img src="{{ d.img }}" alt="" style="width: 100%; height: 100%; object-fit: contain; object-position: center; display: block;"></template>
+                <template data-if="{{ d.noImg }}">
+                  <span style="{{ d.fakeCoverStyle }}">
+                    <span style="font-size: 12px; font-weight: 500; color: #0A602D;">{{ d.org }}</span>
+                    <span style="{{ d.fakeTitleStyle }}">{{ d.coverTitle }}</span>
+                    <span style="font-size: 13px; color: #3D5246;">{{ d.coverYear }}</span>
+                  </span>
+                </template>
+              </span>
+              <span style="{{ d.textStyle }}">
+                <span style="font-weight: 700; font-size: 15px; line-height: 1.3; min-height: 2.6em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ d.title }}</span>
+                <span style="{{ d.resStyle }}">{{ d.res }}</span>
+                <span style="margin-top: auto; font-size: 13px; color: #50656E;">{{ d.meta }}</span>
+              </span>
+            </button>
+          </template>
+        </div>
+        <template data-if="{{ listEmpty }}"><p style="margin: 0; padding: 18px 20px; border-radius: 15px; background: #F4F6F2; color: #50656E; max-width: 720px;">{{ emptyText }}</p></template>
+      </section>
+    </template>
+
+    <!-- DOKUMENTSIDE -->
+    <template data-if="{{ isDoc }}">
+      <article style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start;">
+        <span style="{{ doc.coverStyle }}">
+          <template data-if="{{ doc.img }}"><img src="{{ doc.img }}" alt="" style="width: 100%; height: 100%; object-fit: contain; object-position: center; display: block;"></template>
+          <template data-if="{{ doc.noImg }}">
+            <span style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 20px; box-sizing: border-box;">
+              <span style="font-size: 14px; font-weight: 500; color: #0A602D;">{{ doc.org }}</span>
+              <span style="font-size: 22px; font-weight: 700; line-height: 1.2; color: #0A602D;">{{ doc.coverTitle }}</span>
+              <span style="font-size: 15px; color: #3D5246;">{{ doc.coverYear }}</span>
+            </span>
+          </template>
+        </span>
+        <div style="flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 18px;">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <template data-if="{{ doc.hasStatus }}"><span style="{{ doc.statusStyle }}">{{ doc.status }}</span></template>
+            <h2 style="margin: 0; font-size: clamp(24px, 3.2vw, 34px); line-height: 1.2; font-weight: 700;">{{ doc.title }}</h2>
+            <span style="color: #50656E;">{{ doc.meta }}</span>
+            <template data-if="{{ doc.hasTemaer }}">
+              <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 4px;">
+                <template data-for="{{ doc.temaLinks }}" data-as="tl">
+                  <button type="button" onClick="{{ tl.go }}" style="{{ temaPillStyle }}">{{ tl.name }}</button>
+                </template>
+              </div>
+            </template>
+          </div>
+          <section style="display: flex; flex-direction: column; gap: 6px; max-width: 680px; padding: 16px 18px; border-radius: 15px; background: #F4F6F2;">
+            <h3 style="margin: 0; font-size: 16px;">Resumé</h3>
+            <p style="margin: 0;">{{ doc.longRes }}</p>
+            <span style="font-size: 13px; color: #50656E;">Lavet med AI ud fra dokumentet.</span>
+          </section>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <template data-if="{{ doc.hasUrl }}"><a href="{{ doc.url }}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 22px; border-radius: 10px; background: #0A602D; color: #FFFFFF; text-decoration: none; font-weight: 500;">Åbn PDF</a></template>
+            <template data-if="{{ doc.noUrl }}"><span style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 10px; background: #F4F6F2; color: #50656E;">PDF'en er ikke lagt ind i prototypen</span></template>
+            <button type="button" aria-expanded="{{ docAiStr }}" onClick="{{ askAboutDoc }}" style="min-height: 44px; padding: 0 18px; border: 1px solid #0A602D; border-radius: 10px; background: #FFFFFF; color: #0A602D; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">Spørg AI om dokumentet</button>
+          </div>
+          <template data-if="{{ docAi }}">
+            <section style="display: flex; flex-direction: column; gap: 10px; max-width: 680px; padding: 16px 18px; border: 1px solid #9CC9AA; border-radius: 15px; background: #FFFFFF;">
+              <label for="docq" style="font-weight: 700;">Spørg AI om dokumentet</label>
+              <textarea id="docq" rows="2" value="{{ docQ }}" onInput="{{ setDocQ }}" style="font: inherit; padding: 10px 12px; border: 1px solid #A9B5B0; border-radius: 10px; resize: vertical; color: #24312A;"></textarea>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                <button type="button" onClick="{{ askDocNow }}" style="min-height: 44px; padding: 0 20px; border: 0; border-radius: 10px; background: #0A602D; color: #FFFFFF; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">Spørg</button>
+                <span style="font-size: 13px; color: #50656E;">Svarer ud fra dette dokument.</span>
+              </div>
+              <template data-if="{{ docAsked }}">
+                <p style="margin: 0; padding-top: 12px; border-top: 1px solid #DAE0E0;">{{ docAnswer }}</p>
+                <span style="font-size: 12px; color: #50656E;">Eksempel på svar i prototypen.</span>
+              </template>
+            </section>
+          </template>
+          <template data-if="{{ doc.hasVersions }}">
+            <section style="display: flex; flex-direction: column; gap: 6px; max-width: 680px;">
+              <h3 style="margin: 0 0 4px; font-size: 17px;">Alle udgaver</h3>
+              <template data-for="{{ doc.versions }}" data-as="v">
+                <button type="button" aria-current="{{ v.cur }}" onClick="{{ v.open }}" style="{{ v.style }}"><span>{{ v.label }}</span><span style="{{ v.statusStyle }}">{{ v.status }}</span></button>
+              </template>
+            </section>
+          </template>
+        </div>
+      </article>
+    </template>
+  </main>
+
+  <footer style="background: #0A602D; color: #E6F4EA;">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 24px max(16px, 3vw); font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px 24px; justify-content: space-between;"><span>Affaldsviden.dk</span><span>Designforslag til en ny vidensbank. Prototype med eksempeldata.</span></div>
+  </footer>
+</div>
+</template>
+<script src="dc-lite.js"></script>
+<script src="app.js"></script>
+<script>dcMount(document.getElementById('app'), document.getElementById('vb-skabelon').innerHTML, Component, {});</script>
+</body>
+</html>
