@@ -221,17 +221,6 @@ a{color:#0A602D}a:hover{color:#06401E}
               <label style="display: flex; flex-direction: column; gap: 4px; font-weight: 700;"><span>Kommune eller affaldsselskab</span>
                 <input id="uporg" type="text" value="{{ upOrg }}" onInput="{{ setUpOrg }}" style="font: 400 16px 'Roboto', Arial, sans-serif; padding: 9px 12px; border: 1px solid #A9B5B0; border-radius: 10px; color: #24312A; min-width: 0;">
               </label>
-              <label style="display: flex; flex-direction: column; gap: 4px; font-weight: 700;"><span>Tema <span style="font-weight: 400; color: #50656E;">(valgfrit)</span></span>
-                <select id="uptema" value="{{ upTema }}" onChange="{{ setUpTema }}" style="font: 400 16px 'Roboto', Arial, sans-serif; padding: 9px 12px; border: 1px solid #A9B5B0; border-radius: 10px; color: #24312A; background: #FFFFFF; min-width: 0;">
-                  <option value="">Vælg tema</option>
-                  <template data-for="{{ temaOptions }}" data-as="o"><option value="{{ o.name }}">{{ o.name }}</option></template>
-                </select>
-              </label>
-            </div>
-            <label style="display: flex; flex-direction: column; gap: 4px; font-weight: 700;"><span>Kort beskrivelse <span style="font-weight: 400; color: #50656E;">(valgfrit)</span></span>
-              <textarea id="updesc" rows="2" value="{{ upDesc }}" onInput="{{ setUpDesc }}" placeholder="Hvad handler dokumentet om, og hvad kan andre bruge det til?" style="font: 400 16px 'Roboto', Arial, sans-serif; padding: 9px 12px; border: 1px solid #A9B5B0; border-radius: 10px; color: #24312A; resize: vertical;"></textarea>
-            </label>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 12px 16px; align-items: end;">
               <label style="display: flex; flex-direction: column; gap: 4px; font-weight: 700;"><span>Dit navn</span>
                 <input id="upname" type="text" value="{{ upName }}" onInput="{{ setUpName }}" style="font: 400 16px 'Roboto', Arial, sans-serif; padding: 9px 12px; border: 1px solid #A9B5B0; border-radius: 10px; color: #24312A; min-width: 0;">
               </label>
