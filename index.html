@@ -54,7 +54,6 @@ a{color:#0A602D}a:hover{color:#06401E}
     <div style="{{ heroInnerStyle }}">
       <div style="{{ heroMainStyle }}">
       <h1 style="{{ heroH1Style }}"><a href="#" onClick="{{ goHome }}" style="color: #FFFFFF; text-decoration: none;">VIDENSBANK</a></h1>
-      <p style="margin: 0; max-width: 520px; font-size: 17px; color: #FFFFFF;">Del viden med hinanden på affaldsområdet.</p>
       <div style="display: flex; flex-wrap: wrap; gap: 8px; max-width: 620px;">
         <label for="q" style="position: absolute; left: -9999px;">Søg i vidensbanken</label>
         <input id="q" type="search" value="{{ q }}" onInput="{{ setQ }}" placeholder="Søg efter dokument, emne eller kommune" style="flex: 1 1 260px; min-width: 0; font: inherit; font-size: 17px; padding: 14px 16px; border: 0; border-radius: 10px; background: #FFFFFF; color: #24312A;">
@@ -88,17 +87,7 @@ a{color:#0A602D}a:hover{color:#06401E}
       </template>
       </div>
       <template data-if="{{ heroTall }}">
-        <div style="{{ omPanelStyle }}">
-          <div style="flex: 2 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 6px;">
-            <h2 style="margin: 0; font-size: 17px; font-weight: 700; color: #FFFFFF;">Om vidensbanken</h2>
-            <p style="margin: 0; font-size: 15px; line-height: 1.55; color: rgba(255, 255, 255, 0.92);">Formålet med Vidensbanken er at dele viden med hinanden på affaldsområdet. Vidensbanken indeholder en række dokumenter fra de kommuner og affaldsselskaber, som deltager i Affaldsviden.dk. Vidensbanken indeholder interne notater, undersøgelser, konsulentrapporter, kommunikationsmateriale og andre dokumenter, som I kan lade jer inspirere af.</p>
-          </div>
-          <div style="flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 8px;">
-            <h2 style="margin: 0; font-size: 17px; font-weight: 700; color: #FFFFFF;">Bidrag til vidensdelingen</h2>
-            <p style="margin: 0; font-size: 15px; line-height: 1.55; color: rgba(255, 255, 255, 0.92);">Send dokumenter til <b style="color: #FFFFFF; user-select: all;">jhn@jhn.dk</b>, eller indsend dine dokumenter her.</p>
-            <button type="button" onClick="{{ goIndsend }}" style="align-self: flex-start; min-height: 44px; padding: 0 20px; border: 0; border-radius: 10px; background: #FFFFFF; color: #0A602D; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">Indsend dokumenter</button>
-          </div>
-        </div>
+        <p style="{{ heroCtaStyle }}">Har I dokumenter, som andre kan bruge? <button type="button" onClick="{{ goIndsend }}" style="padding: 0; border: 0; background: none; color: #FFFFFF; font: 700 15px 'Roboto', Arial, sans-serif; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;">Indsend dem her</button>, eller send dem til <b style="color: #FFFFFF; user-select: all;">jhn@jhn.dk</b>.</p>
       </template>
       <template data-if="{{ heroArrow }}">
         <button type="button" aria-label="Rul ned til indholdet" onClick="{{ scrollDown }}" style="position: absolute; right: max(16px, 3vw); bottom: 28px; width: 56px; height: 56px; padding: 0; display: flex; align-items: center; justify-content: center; border: 1.5px solid #FFFFFF; border-radius: 50%; background: rgba(6, 40, 20, 0.25); color: #FFFFFF; cursor: pointer;">
@@ -175,6 +164,17 @@ a{color:#0A602D}a:hover{color:#06401E}
         </div>
       </section>
 
+      <section style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; padding: 24px max(18px, 2.5vw); border-radius: 15px; background: #E6F4EA;">
+        <div style="flex: 2 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 8px;">
+          <h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #0A602D;">Om vidensbanken</h2>
+          <p style="margin: 0; max-width: 680px;">Formålet med Vidensbanken er at dele viden med hinanden på affaldsområdet. Vidensbanken indeholder en række dokumenter fra de kommuner og affaldsselskaber, som deltager i Affaldsviden.dk. Vidensbanken indeholder interne notater, undersøgelser, konsulentrapporter, kommunikationsmateriale og andre dokumenter, som I kan lade jer inspirere af.</p>
+        </div>
+        <div style="flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: 15px; border: 1px solid #9CC9AA; background: #FFFFFF;">
+          <h3 style="margin: 0; font-size: 18px; color: #24312A;">Bidrag til vidensdelingen</h3>
+          <p style="margin: 0;">Send dokumenter til <b style="user-select: all;">jhn@jhn.dk</b>, eller indsend dine dokumenter her.</p>
+          <button type="button" onClick="{{ goIndsend }}" style="align-self: flex-start; min-height: 44px; padding: 0 20px; border: 0; border-radius: 10px; background: #0A602D; color: #FFFFFF; font: 500 15px 'Roboto', Arial, sans-serif; cursor: pointer;">Indsend dokumenter</button>
+        </div>
+      </section>
     </template>
 
     <!-- INDSEND DOKUMENTER -->

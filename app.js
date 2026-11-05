@@ -339,8 +339,7 @@ class Component extends DCLogic {
       heroInnerStyle: 'max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; position: relative; '
         + (heroTall ? 'gap: 28px; padding: 40px max(16px, 3vw) 28px; min-height: calc(100vh - 137px); min-height: min(calc(100svh - 137px), 900px);' : 'gap: 14px; padding: 44px max(16px, 3vw) 40px;'),
       heroMainStyle: 'display: flex; flex-direction: column; gap: 14px;' + (heroTall ? ' margin-block: auto;' : ''),
-      omPanelStyle: 'display: flex; flex-wrap: wrap; gap: 14px 36px; align-items: flex-start; padding: 18px 22px; border-radius: 15px; background: rgba(4, 34, 17, 0.58); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);'
-        + (narrow ? '' : ' max-width: 980px; margin-right: 76px;'),
+      heroCtaStyle: 'margin: 0; max-width: 620px; font-size: 15px; line-height: 1.55; color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);' + (narrow ? '' : ' margin-right: 76px;'),
       // Blød rulning, og et direkte hop bagefter, hvis browseren ikke ruller blødt
       scrollDown: () => { try {
         const el = document.getElementById('vb-indhold'); if (!el) return;
