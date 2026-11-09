@@ -28,7 +28,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <div style="background: #FFFFFF; color: #24312A; font-family: 'Roboto', Arial, sans-serif; font-size: 16px; line-height: 1.5; min-height: 1400px;">
 
   <header style="background: #FFFFFF; border-bottom: 1px solid #DAE0E0;">
-    <div style="max-width: 1180px; margin: 0 auto; padding: 12px max(16px, 3vw); display: flex; align-items: center; gap: 28px;">
+    <div style="max-width: 1320px; margin: 0 auto; padding: 12px max(16px, 3vw); display: flex; align-items: center; gap: 28px;">
       <a href="#" aria-label="Affaldsviden" style="display: block; line-height: 0;"><img src="img/113a04a9753750471211ed7ca8080ecc.png" alt="Affaldsviden" style="{{ logoStyle }}"></a>
       <template data-if="{{ wide }}">
         <nav aria-label="Hovedmenu" style="margin-left: auto; display: flex; flex-wrap: wrap; gap: 22px; font-size: 15px;">
@@ -123,7 +123,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
   </section>
   </template>
 
-  <main id="vb-indhold" style="max-width: 1180px; margin: 0 auto; padding: 24px max(16px, 3vw) 56px; display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 0;">
+  <main id="vb-indhold" style="max-width: 1320px; margin: 0 auto; padding: 24px max(16px, 3vw) 56px; display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 0;">
 
     <template data-if="{{ hasCrumb }}">
       <nav aria-label="Brødkrumme" style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 15px; color: #50656E; margin-bottom: -16px;">
@@ -241,6 +241,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
                 </template>
                 <button type="button" onClick="{{ clearFilters }}" style="{{ linkBtnStyle }}">Ryd alle</button>
               </div>
+            </template>
+            <template data-if="{{ hasSearchInfo }}">
+              <p style="margin: -4px 0 0; font-size: 14px; color: #50656E; max-width: 75ch;">{{ searchInfo }}</p>
+            </template>
+            <template data-if="{{ hasPartial }}">
+              <p style="margin: 0; padding: 10px 14px; border-radius: 10px; background: #F4F6F2; font-size: 14px; color: #24312A;">{{ partialText }}</p>
             </template>
             <template data-if="{{ hasQuick }}">
               <div style="display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 15px; background: #F4F6F2;">
@@ -452,12 +458,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
   </template>
 
   <footer style="background: #0A602D; color: #E6F4EA;">
-    <div style="max-width: 1180px; margin: 0 auto; padding: 24px max(16px, 3vw); font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px 24px; justify-content: space-between;"><span>Affaldsviden.dk</span><span>Designforslag til en ny vidensbank. Prototype med eksempeldata.</span></div>
+    <div style="max-width: 1320px; margin: 0 auto; padding: 24px max(16px, 3vw); font-size: 14px;">Affaldsviden.dk</div>
   </footer>
 </div>
 </template>
 <script src="dc-lite.js?v=e530f879dd"></script>
-<script src="app.js?v=94128aec13"></script>
+<script src="app.js?v=85e7c5e8cd"></script>
 <script>dcMount(document.getElementById('app'), document.getElementById('vb-skabelon').innerHTML, Component, {});</script>
 </body>
 </html>

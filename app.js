@@ -24,7 +24,78 @@ class Component extends DCLogic {
     ['view', 'docId', 'serie', 'variant', 'kq', 'allUnits', 'q', 'fTemaer', 'fTypes', 'fOrgs', 'fYears', 'fSort', 'listLimit', 'from'].forEach((k) => { o[k] = s[k]; });
     return { vb: o };
   }
+  // Ordstammer med samme regel som ordindekset (byg_soegeindeks.py). Endelsen skæres af to gange, så fx "genbrugspladser",
+  // "genbrugsplads" og "genbrugspladsen" alle bliver "genbrugsplad", og "tekstiler" bliver "tekstil".
+  static stem(w) {
+    const SUF = Component._suf || (Component._suf = ['erendes', 'erende', 'hedens', 'erede', 'heden', 'heder', 'endes', 'ernes', 'erens', 'erets', 'ered', 'ende', 'erne', 'eres',
+      'eren', 'eret', 'erer', 'enes', 'heds', 'ens', 'ere', 'ers', 'ets', 'hed', 'ene', 'en', 'er', 'es', 'et', 'e', 's'].sort((a, b) => b.length - a.length));
+    const cut = (x) => { if (x.length <= 4 || /^\d+$/.test(x)) return x; for (const e of SUF) if (x.endsWith(e) && x.length - e.length >= 4) return x.slice(0, -e.length); return x; };
+    return cut(cut(w));
+  }
+  // Danske småord, der ikke er søgeord
+  static stopord() { return Component._stop || (Component._stop = new Set('og i på af til for om med en et den det de der som er at hvad hvordan hvor hvilke kan skal vi man ved eller samt fx'.split(' '))); }
+  // Deler søgningen op i ord efter samme regel som ordindekset, så bindestreger, skråstreger og anførselstegn ikke skiller ordene forkert.
+  // Årstal og perioder ("2024", "2022-2024", "2022-24", "mellem 2020 og 2023", "efter 2023", "før 2020", "til og med 2022") bliver til årstal.
+  // Ord for dokumenttyper ("vejledning") er almindelige søgeord, der også løfter dokumenter af den type. Årstal efter det nyeste udgivelsesår
+  // (fx et mål for 2035) er almindelige søgeord.
+  static parseQ(q, maxYear) {
+    const TYPES = { analyse: 'Analyse', analyser: 'Analyse', evaluering: 'Evaluering', evalueringer: 'Evaluering', rapport: 'Rapport', rapporter: 'Rapport',
+      notat: 'Notat', notater: 'Notat', vejledning: 'Vejledning', vejledninger: 'Vejledning', faktaark: 'Faktaark', statistik: 'Statistik', statistikker: 'Statistik',
+      regneark: 'Regneark', strategi: 'Strategi', strategier: 'Strategi', høringsudkast: 'Høringsudkast', høringsnotat: 'Høringsnotat', høringsnotater: 'Høringsnotat',
+      lovforslag: 'Lovforslag', afgørelse: 'Afgørelse', afgørelser: 'Afgørelse', kendelse: 'Afgørelse', kendelser: 'Afgørelse', oplæg: 'Oplæg' };
+    const STOP = Component.stopord();
+    const q2 = q.toLowerCase()
+      .replace(/(^|\s)til og med\s+(?=(19|20)\d{2})/g, '$1indtil ')
+      .replace(/(^|\s)fra og med\s+(?=(19|20)\d{2})/g, '$1fra ')
+      .replace(/(^|\s)(inden|senest)\s+(?=(19|20)\d{2})/g, (m0, a, b) => a + (b === 'inden' ? 'før ' : 'indtil '))
+      .replace(/(^|\s)mellem\s+((?:19|20)\d{2})\s+og\s+((?:19|20)\d{2})/g, '$1$2_$3')
+      .replace(/((?:19|20)\d{2})\s*(?:[-–—]|til)\s*((?:19|20)?\d{2})(?!\d)/g, (m0, a, b) => a + '_' + (b.length === 2 ? a.slice(0, 2) + b : b));
+    const toks = q2.match(/[a-zæøå0-9_]+/g) || [];
+    const r = { terms: [], types: [], years: [], yMin: 0, yMax: 9999 };
+    const yr = (t) => /^(19|20)\d{2}$/.test(t);
+    for (let i = 0; i < toks.length; i++) {
+      const m = toks[i].match(/^(\d{4})_(\d{4})$/);
+      if (m) { r.yMin = Math.max(r.yMin, Math.min(+m[1], +m[2])); r.yMax = Math.min(r.yMax, Math.max(+m[1], +m[2])); continue; }
+      const t = toks[i].replace(/_/g, '');
+      if (['efter', 'fra', 'siden'].includes(t) && yr(toks[i + 1] || '')) { r.yMin = Math.max(r.yMin, +toks[i + 1] + (t === 'efter' ? 1 : 0)); i++; continue; }
+      if (['før', 'indtil', 'til'].includes(t) && yr(toks[i + 1] || '')) { r.yMax = Math.min(r.yMax, +toks[i + 1] - (t === 'før' ? 1 : 0)); i++; continue; }
+      if (yr(t) && +t <= maxYear) { if (!r.years.includes(+t)) r.years.push(+t); continue; }
+      if (TYPES[t] && !r.types.includes(TYPES[t])) r.types.push(TYPES[t]);
+      if (STOP.has(t) || t.length < 2) continue;
+      r.terms.push(t);
+    }
+    return r;
+  }
+  // De dokumenter, hvor et ord eller et ord, der begynder med det, står i teksten. null, indtil ordindekset er hentet.
+  static ftDocs(w) {
+    const ft = Component._ft;
+    if (!ft) return null;
+    const c = Component._ftCache || (Component._ftCache = {});
+    if (c[w]) return c[w];
+    const out = new Set();
+    const add = (k) => ft.w[k].split(',').forEach((i) => out.add(ft.ids[+i]));
+    if (w.length >= 4) {
+      // Ordene ligger sorteret, så de ord, der begynder med w, findes med en binær søgning
+      const K = Component._ftKeys || (Component._ftKeys = Object.keys(ft.w).sort());
+      let lo = 0, hi = K.length;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (K[mid] < w) lo = mid + 1; else hi = mid; }
+      for (let i = lo; i < K.length && K[i].startsWith(w); i++) add(K[i]);
+    } else if (ft.w[w]) add(w);
+    return (c[w] = out);
+  }
+  // Ordindekset over dokumenternes tekst (ca. 1 MB) hentes første gang, man søger. Indtil da søges der i titler, temaer og resuméer.
+  // Går hentningen galt, prøves der igen ved næste tastetryk.
+  _loadFt() {
+    if (Component._ftState === 'henter' || Component._ftState === 'klar') return;
+    Component._ftState = 'henter';
+    try {
+      fetch('img/4f92b9ff5bfe518a7b52eac8eb3391cb.json').then((r) => r.json())
+        .then((j) => { Component._ft = j; Component._ftCache = {}; Component._ftKeys = null; Component._ftState = 'klar'; this.setState({ ftKlar: true }); })
+        .catch(() => { Component._ftState = 'fejl'; this.setState({ ftKlar: false }); });
+    } catch (e) { Component._ftState = 'fejl'; }
+  }
   componentDidMount() {
+    if (this.state.q) this._loadFt();
     try {
       const check = () => this.setState({ narrowWin: window.innerWidth < 800, midWin: window.innerWidth < 1100 });
       check();
@@ -635,7 +706,7 @@ class Component extends DCLogic {
     const FRESET = { q: '', fTemaer: [], fTypes: [], fOrgs: [], fYears: [], fSort: '', listLimit: 20, orgFind: '' };
     // Husker hvor man kom fra, så brødkrummen og tilbage-knappen fører til samme sted i listen
     const openDoc = (d) => () => nav({ view: 'doc', docId: d.id, from: st.view === 'doc' ? st.from : { serie: st.serie || '', y: sy() } })();
-    const goSerie = (sid, kq) => nav({ view: 'home', docId: '', serie: sid, kq: kq || '', allUnits: false, variant: 'H' });
+    const goSerie = (sid, kq, vv) => nav({ view: 'home', docId: '', serie: sid, kq: kq || '', allUnits: false, variant: vv || 'H' });
     const goViden = nav({ view: 'home', docId: '', serie: '' });
     // Dokumentkort med forsiden i A4-format, så hele forsiden kan ses. På smalle skærme ligger forsiden til venstre for teksten.
     const coverSmall = (d) => 'display: block; aspect-ratio: 210 / 297; overflow: hidden; background: ' + (d.img ? '#F4F6F2' : '#E6F4EA') + '; '
@@ -649,7 +720,7 @@ class Component extends DCLogic {
     const toRow = (d) => ({ ...d, img: d.img || '', noImg: !d.img, coverTitle: d.coverTitle || d.title, coverYear: d.coverYear || '', coverStyle: coverSmall(d),
       cardStyle: listCard, textStyle: listText, resStyle: listRes, fakeCoverStyle: fakeCover, fakeTitleStyle: fakeTitle,
       title: d.sid ? d.title + (d.sid === 'aars' || d.sid === 'esg' ? ', ' + d.org : ', ' + d.unit) : d.title,
-      meta: d.sid ? d.org + ' · ' + (d.date ? 'vedtaget ' + d.date : d.status) : d.org + ' · ' + d.year + ' · ' + d.type, open: openDoc(d) });
+      meta: d.sid ? d.org + ' · ' + (d.date ? 'vedtaget ' + d.date : d.status) : d.org + ' · ' + d.year + ' · ' + d.type + ((SC.get(d.id) || {}).ft ? ' · Fundet i teksten' : ''), open: openDoc(d) });
 
     // Visning: hovedsiden viser enten vidensdokumenterne eller én fast dokumenttype
     const view = st.view;
@@ -687,18 +758,53 @@ class Component extends DCLogic {
     const serieHeading = sname.name + (vWord ? ' · ' + vWord : '');
     const serieHint = { gebyr: 'Klik på et år for at åbne gebyrbladet. Det nyeste står først.', reg: 'Klik på en vedtagelsesdato for at åbne regulativet. Den nyeste står først.', plan: 'Klik på en planperiode for at åbne planen. Den nyeste står først.' }[sname.id] || 'Klik på et år for at åbne rapporten. Det nyeste står først.';
 
-    // Søgningen i toppen: alle ord skal stå i dokumentet
+    // Søgningen i toppen. Ordene findes i titel, udgiver, temaer og resuméer og i hele dokumentets tekst (ordindekset). Ordene sammenlignes på
+    // deres stamme, så bøjninger finder hinanden, og nogle få synonymer tæller med. Korte ord skal stå i starten af et ord, så fx "jern" ikke
+    // passer på "Skjern". Årstal og perioder passer på udgivelsesåret eller et årstal i titlen. Passer intet dokument på alle ordene, vises dem med flest.
     const q = st.q.trim().toLowerCase();
     const words = q.split(/\s+/).filter(Boolean);
-    const textHits = words.length ? VIDEN.filter((d) => words.every((w) => lowOf(d).all.includes(w))) : VIDEN;
+    const P = Component.parseQ(q, Math.max(...VIDEN.map((d) => d.year)));
+    const SYNS = Component._syns || (Component._syns = Object.fromEntries(Object.entries({ genbrugsplads: ['genbrugsstation', 'genbrugscenter'], genbrugsstation: ['genbrugsplads'],
+      skraldebil: ['renovationsbil', 'skraldevogn'], renovationsbil: ['skraldebil'], restaffald: ['dagrenovation'], dagrenovation: ['restaffald'], madaffald: ['bioaffald'],
+      bioaffald: ['madaffald'], tøj: ['tekstil'], tekstil: ['tøj'], elektronik: ['weee', 'elaffald'], weee: ['elektronik', 'elaffald'], asbest: ['eternit'], eternit: ['asbest'] })
+      .map(([k, v]) => [Component.stem(k), v.map((w) => Component.stem(w))])));
+    // Ord på 5 tegn eller mere må stå inde i et sammensat ord (madaffald), kortere ord skal stå i starten af et ord, og ord på 2 tegn skal være et helt ord
+    const mk = (a) => a.length >= 5 ? (x) => x.includes(a) : ((re) => (x) => re.test(x))(new RegExp('(^|[^a-zæøå0-9])' + a + (a.length <= 2 ? '($|[^a-zæøå0-9])' : '')));
+    const terms = P.terms.map((t) => { const x = Component.stem(t); const alts = [...new Set([x].concat(SYNS[x] || []))]; return { t, alts, m: alts.map(mk), ft: alts.map((a) => Component.ftDocs(a)) }; });
+    // Årstal i titlen tæller kun, når de ikke er en del af et nummer (fx 2008/98/EF), og kun ved et bestemt år eller en lukket periode
+    const tYears = (d) => d._ty || (d._ty = (d.title.match(/(?<![\/\d])(?:19|20)\d{2}(?![\/\d])/g) || []).map(Number));
+    const yPass = (y) => y >= P.yMin && y <= P.yMax && (!P.years.length || P.years.includes(y));
+    const hasY = P.years.length > 0 || P.yMin > 0 || P.yMax < 9999;
+    const titleY = P.years.length > 0 || (P.yMin > 0 && P.yMax < 9999);
+    const base0 = hasY ? VIDEN.filter((d) => yPass(d.year) || (titleY && tYears(d).some(yPass))) : VIDEN;
+    const SC = new Map();
+    const tHits = terms.map(() => 0);
+    let textHits = base0, partial = false, missing = [];
+    if (terms.length) {
+      base0.forEach((d) => {
+        const L = lowOf(d);
+        let n = 0, sc = 0, ft = false;
+        terms.forEach((x, i) => {
+          if (x.m.some((f) => f(L.all))) { n++; tHits[i]++; sc += x.m.some((f) => f(L.title)) ? 4 : x.m.some((f) => f(L.temaer)) ? 3 : 2; }
+          else if (x.ft.some((set) => set && set.has(d.id))) { n++; tHits[i]++; sc += 1; ft = true; }
+        });
+        // Dokumenter af den nævnte type og med årstallet i titlen kommer først
+        if (n) SC.set(d.id, { n, sc: sc + (P.types.includes(d.type) ? 3 : 0) + (titleY && tYears(d).some(yPass) ? 1 : 0), ft });
+      });
+      const alle = base0.filter((d) => (SC.get(d.id) || {}).n === terms.length);
+      if (alle.length || terms.length === 1) textHits = alle;
+      else { const need = Math.ceil(terms.length / 2); textHits = base0.filter((d) => (SC.get(d.id) || {}).n >= need); partial = textHits.length > 0; }
+      missing = terms.filter((x, i) => !tHits[i]).map((x) => x.t);
+    }
     // Filtre med flere valg: inden for et filter skal dokumentet passe på ét af de valgte punkter, og på tværs af filtrene på dem alle
     const F = { tema: st.fTemaer || [], type: st.fTypes || [], org: st.fOrgs || [], year: st.fYears || [] };
     const pass = (d, skip) => (skip === 'tema' || !F.tema.length || d.temaer.some((t) => F.tema.includes(t)))
       && (skip === 'type' || !F.type.length || F.type.includes(d.type))
       && (skip === 'org' || !F.org.length || F.org.includes(d.org))
       && (skip === 'year' || !F.year.length || F.year.includes(String(d.year)));
-    const sortValue = st.fSort && (st.fSort !== 'match' || words.length) ? st.fSort : (words.length ? 'match' : 'nyeste');
-    const score = (d) => words.reduce((n, w) => n + (lowOf(d).title.includes(w) ? 3 : 0) + (lowOf(d).temaer.includes(w) ? 2 : 0) + lowOf(d).all.split(w).length - 1, 0);
+    const sortValue = st.fSort && (st.fSort !== 'match' || terms.length) ? st.fSort : (terms.length ? 'match' : 'nyeste');
+    // Bedst match: flest søgeord først, og træf i titlen vægter mest
+    const score = (d) => { const x = SC.get(d.id); return x ? x.n * 10 + x.sc : 0; };
     const ORDER = Component._order || (Component._order = new Map(VIDEN.map((x, i) => [x.id, i])));
     const byTitle = (a, b) => a.title.localeCompare(b.title, 'da');
     const cmp = {
@@ -768,20 +874,28 @@ class Component extends DCLogic {
     let quickUnits = [], quickLinks = [];
     if (inViden && words.length) {
       const units = kommuner.map((n) => [n, 'kommune']).concat(selskaber.map((n) => [n, 'selskab']));
-      const yr = words.find((w) => /^(19|20)\d{2}$/.test(w));
-      const unitHits = units.filter(([n]) => words.some((w) => w.length >= 3 && n.toLowerCase().includes(w))).slice(0, 3);
-      const rest = words.filter((w) => w !== yr && !unitHits.some(([n]) => n.toLowerCase().includes(w)));
-      const serieHits = rest.length ? SERIER.filter((x) => !x.proposal && rest.every((w) => (x.name + ' ' + x.desc).toLowerCase().includes(w))) : [];
+      const STOP = Component.stopord();
+      const toks = q.match(/[a-zæøå0-9]+/g) || [];
+      const yr = toks.find((w) => /^(19|20)\d{2}$/.test(w));
+      const unitHits = units.filter(([n]) => toks.some((w) => w.length >= 3 && mk(w)(n.toLowerCase()))).slice(0, 3);
+      const rest0 = toks.filter((w) => w.length >= 3 && !STOP.has(w) && !/^(19|20)\d{2}$/.test(w) && !unitHits.some(([n]) => mk(w)(n.toLowerCase())));
+      // "erhverv" og "husholdning" vælger variant af gebyrblade og regulativer
+      const vv = rest0.some((w) => /^(erhverv|virksomhed)/.test(w)) ? 'E' : rest0.some((w) => /^husholdning/.test(w)) ? 'H' : '';
+      const rest = rest0.filter((w) => !/^(erhverv|virksomhed|husholdning)/.test(w));
+      const serieHits = rest.length ? SERIER.filter((x) => !x.proposal && rest.every((w) => (x.name + ' ' + x.desc).toLowerCase().includes(Component.stem(w)))) : [];
       const qLabel = (d) => d.sid === 'reg' ? 'Regulativ ' + vName[d.variant] + ' ' + d.date : d.sid === 'plan' ? (d.short === 'Affaldsplan' ? 'Affaldsplan' : 'Affaldsplan ' + d.short) : d.title;
       if (!rest.length || serieHits.length) quickUnits = unitHits.map(([n, kind]) => {
-        const wanted = kind === 'kommune' ? [['gebyr', 'H'], ['gebyr', 'E'], ['reg', 'H'], ['reg', 'E'], ['plan', '']] : [['aars', ''], ['esg', '']];
-        const docs = wanted.filter(([sid]) => !serieHits.length || serieHits.some((x) => x.id === sid)).map(([sid, vv]) => serieDocs(sid, n, vv).find((d) => !yr || String(d.year) === yr)).filter(Boolean)
+        const wanted = (kind === 'kommune' ? [['gebyr', 'H'], ['gebyr', 'E'], ['reg', 'H'], ['reg', 'E'], ['plan', '']] : [['aars', ''], ['esg', '']])
+          .filter(([, v2]) => !vv || !v2 || v2 === vv);
+        const docs = wanted.filter(([sid]) => !serieHits.length || serieHits.some((x) => x.id === sid)).map(([sid, v2]) => serieDocs(sid, n, v2).find((d) => !yr || String(d.year) === yr)).filter(Boolean)
           .map((d) => ({ label: qLabel(d), open: openDoc(d) }));
         return { name: (kind === 'kommune' ? n + ' Kommune' : n) + ':', docs };
       }).filter((u) => u.docs.length);
-      quickLinks = serieHits.map((x) => ({ name: x.name, go: goSerie(x.id, (unitHits.find(([, k]) => k === x.unit) || [''])[0]) }))
-        .concat(TEMAER.filter((t) => !F.tema.includes(t.name) && words.every((w) => (t.name + ' ' + (t.from || []).join(' ')).toLowerCase().includes(w)))
-          .map((t) => ({ name: 'Tema: ' + t.name, go: () => upd({ fTemaer: F.tema.concat(t.name), q: '', listLimit: 20 }) })))
+      // Et temaforslag beholder resten af søgningen, fx årstal og perioder
+      const keepQ = (st.q.match(/\S+/g) || []).filter((w) => { const k = w.toLowerCase().match(/[a-zæøå0-9]+/g) || []; return !k.length || !k.every((x) => P.terms.includes(x)); }).join(' ');
+      quickLinks = serieHits.map((x) => ({ name: x.name, go: goSerie(x.id, (unitHits.find(([, k]) => k === x.unit) || [''])[0], vv) }))
+        .concat(TEMAER.filter((t) => terms.length && !F.tema.includes(t.name) && P.terms.every((w) => mk(Component.stem(w))((t.name + ' ' + (t.from || []).join(' ')).toLowerCase())))
+          .map((t) => ({ name: 'Tema: ' + t.name, go: () => upd({ fTemaer: F.tema.concat(t.name), q: keepQ, listLimit: 20 }) })))
         .slice(0, 5);
     } else if (inViden && F.tema.length) {
       const ids = [...new Set(F.tema.flatMap((name) => ((TEMAER.find((t) => t.name === name) || {}).serie || '').split(' ').filter(Boolean)))];
@@ -873,7 +987,7 @@ class Component extends DCLogic {
       // Toppen fylder 2/3 af skærmen på hovedsiden, så starten af næste afsnit kan ses
       heroFull: isHome, heroArrow: isHome && !narrow, heroAi: isHome && st.aiOpen,
       logoStyle: 'display: block; width: auto; height: ' + (narrow ? '22px' : '30px') + ';',
-      heroInnerStyle: 'box-sizing: border-box; max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; position: relative; padding: clamp(36px, 9vh, 104px) max(16px, 3vw) 40px; min-height: 66.67vh; min-height: min(66.67svh, 720px);',
+      heroInnerStyle: 'box-sizing: border-box; max-width: 1320px; margin: 0 auto; display: flex; flex-direction: column; position: relative; padding: clamp(36px, 9vh, 104px) max(16px, 3vw) 40px; min-height: 66.67vh; min-height: min(66.67svh, 720px);',
       heroMainStyle: 'display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; width: 100%;',
       // Blød rulning ned til dokumenterne, og et direkte hop bagefter, hvis browseren ikke ruller blødt
       scrollDown: () => { try {
@@ -883,8 +997,8 @@ class Component extends DCLogic {
       } catch (e) {} },
       heroH1Style: 'margin: 0 0 4px; font-family: \'Inter\', \'Roboto\', Arial, sans-serif; font-weight: 700; font-size: clamp(44px, 8.5vw, 112px); line-height: 1; letter-spacing: 0; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45), 0 2px 18px rgba(0, 0, 0, 0.25);',
       goHome: nav({ view: 'home', docId: '', serie: '' }), crumbRoot, goIndsend: nav({ view: 'indsend', upSent: false, upError: '', upFiles: [], upShare: false }),
-      q: inSerie ? st.kq : st.q, setQ: (e) => inSerie ? upd({ kq: e.target.value }) : upd({ q: e.target.value, listLimit: 20 }),
-      qPlaceholder: inSerie ? sname.unit === 'selskab' ? 'Find selskab' : 'Find kommune' : 'Søg efter dokument, emne eller kommune',
+      q: inSerie ? st.kq : st.q, setQ: (e) => { if (inSerie) { upd({ kq: e.target.value }); return; } if (e.target.value.trim()) this._loadFt(); upd({ q: e.target.value, listLimit: 20 }); },
+      qPlaceholder: inSerie ? sname.unit === 'selskab' ? 'Find selskab' : 'Find kommune' : 'Søg efter dokument, emne, kommune eller årstal',
       qLabel: inSerie ? sname.unit === 'selskab' ? 'Find selskab' : 'Find kommune' : 'Søg i vidensbanken',
       qKey: (e) => { if (e.key === 'Enter') { try { e.preventDefault(); e.target.blur(); } catch (err) {} toResults(); } }, toResults,
       showResults: () => { this.setState({ filtersOpen: false }); toResults(); },
@@ -922,7 +1036,7 @@ class Component extends DCLogic {
       panelDoneStyle: 'margin-top: 12px; min-height: 48px; border: 0; border-radius: 10px; background: #0A602D; color: #FFFFFF; font: 500 16px "Roboto", Arial, sans-serif; cursor: pointer;',
       sortValue, setFSort: (e) => upd({ fSort: e.target.value }),
       sortSelStyle: 'min-height: ' + (narrow ? '44px' : '40px') + '; padding: 0 8px; font: 400 15px "Roboto", Arial, sans-serif; border: 1px solid #C9D2CD; border-radius: 10px; background: #FFFFFF; color: #24312A; cursor: pointer; max-width: 48vw;',
-      sortOptions: (words.length ? [{ value: 'match', label: 'Bedst match' }] : []).concat([
+      sortOptions: (terms.length ? [{ value: 'match', label: 'Bedst match' }] : []).concat([
         { value: 'nyeste', label: 'Nyeste først' }, { value: 'aeldste', label: 'Ældste først' }, { value: 'tilfoejet', label: 'Senest tilføjet' },
         { value: 'titel', label: 'Titel A-Å' }, { value: 'udgiver', label: 'Udgiver A-Å' }]),
       hasChips: inViden && activeChips.length > 0, activeChips,
@@ -933,8 +1047,26 @@ class Component extends DCLogic {
       temaPillStyle: 'display: inline-flex; align-items: center; min-height: ' + (narrow ? '44px' : '36px') + '; padding: 0 12px; border-radius: 8px; border: 1px solid #DAE0E0; background: #FFFFFF; color: #24312A; font: 500 14px "Roboto", Arial, sans-serif; cursor: pointer;',
       listDocs: listDocs.slice(0, st.listLimit).map(toRow), listEmpty: inViden && n === 0,
       hasMoreDocs: inViden && n > st.listLimit, moreDocsLabel: 'Vis ' + Math.min(20, n - st.listLimit) + ' flere (' + (n - st.listLimit) + ' tilbage)', showMoreDocs: () => upd({ listLimit: st.listLimit + 20 }),
-      listGridStyle: 'display: grid; grid-template-columns: ' + (narrow ? '1fr' : 'repeat(auto-fill, minmax(min(' + (st.midWin ? '200px' : '220px') + ', 100%), 1fr))') + '; gap: ' + (narrow ? '12px' : (st.midWin ? '16px' : '20px')) + ';',
-      emptyText: quickUnits.length ? 'Ingen vidensdokumenter passer til søgningen. De faste dokumenter står ovenfor.'
+      listGridStyle: 'display: grid; grid-template-columns: ' + (narrow ? '1fr' : 'repeat(auto-fill, minmax(min(200px, 100%), 1fr))') + '; gap: ' + (narrow ? '12px' : (st.midWin ? '16px' : '20px')) + ';',
+      hasSearchInfo: inViden && (terms.length > 0 || hasY),
+      searchInfo: (() => {
+        const ord = [...new Set((st.q.match(/[A-Za-zÆØÅæøå0-9]+/g) || []).filter((w) => P.terms.includes(w.toLowerCase())))];
+        let t = ord.length ? 'Viser dokumenter med ' + (ord.length > 1 ? ord.slice(0, -1).join(', ') + ' og ' + ord[ord.length - 1] : ord[0]) : 'Viser dokumenter';
+        if (P.years.length) t += ' fra ' + P.years.join(' eller ');
+        else if (P.yMin > 0 && P.yMax < 9999) t += ' fra ' + P.yMin + '-' + P.yMax;
+        else if (P.yMin > 0) t += ' fra ' + P.yMin + ' og senere';
+        else if (P.yMax < 9999) t += ' fra ' + P.yMax + ' og tidligere';
+        t += '.';
+        if (terms.length) t += Component._ftState === 'klar' ? ' Der søges også i dokumenternes fulde tekst.'
+          : Component._ftState === 'henter' ? ' Henter dokumenternes tekst, så der også kan søges i den.'
+          : Component._ftState === 'fejl' ? ' Dokumenternes tekst kunne ikke hentes, så der søges kun i titler, temaer og resuméer.' : '';
+        return t;
+      })(),
+      partialText: !partial ? '' : missing.length ? 'Intet dokument indeholder ' + missing.join(' eller ') + '. Viser dokumenter med de andre ord.'
+        : 'Intet dokument indeholder alle ordene. Her er dem, der indeholder flest af dem.',
+      hasPartial: inViden && partial,
+      emptyText: Component._ftState === 'henter' && terms.length ? 'Leder stadig i dokumenternes tekst …'
+        : quickUnits.length ? 'Ingen vidensdokumenter passer til søgningen. De faste dokumenter står ovenfor.'
         : nActive ? 'Ingen dokumenter passer til søgningen og filtrene. Prøv at fjerne et filter.' : 'Ingen dokumenter passer til søgningen. Prøv et andet ord.',
 
       // Faste dokumenter
