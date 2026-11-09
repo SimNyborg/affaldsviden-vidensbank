@@ -78,7 +78,9 @@
       var act = document.activeElement;
       var id = act && act.id && root.contains(act) ? act.id : '';
       // Knapper uden id (fx filtrene) har en data-key, så fokus bliver på samme knap, når man bruger tastaturet
-      var dkey = !id && act && root.contains(act) && act.getAttribute ? act.getAttribute('data-key') : null;
+      // Kun ved tastatur, så et museklik ikke efterlader en fokusramme
+      var kbd = false; try { kbd = act && act.matches && act.matches(':focus-visible'); } catch (e) {}
+      var dkey = !id && kbd && root.contains(act) && act.getAttribute ? act.getAttribute('data-key') : null;
       var sel = id && typeof act.selectionStart === 'number' ? [act.selectionStart, act.selectionEnd] : null;
       var keep = {};
       Array.prototype.forEach.call(root.querySelectorAll('input[id]'), function (x) {

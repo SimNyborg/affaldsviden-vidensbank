@@ -18,8 +18,9 @@ class Component extends DCLogic {
     };
   }
   // Det, der gemmes i browserens historik, så tilbage-knappen fører til samme side, samme filtre og samme sted på siden
+  // d er antallet af sider, man har bevæget sig frem i vidensbanken, så tilbage-knappen ved, om der er en side at gå tilbage til
   _snap(s, y) {
-    const o = { y: y || 0 };
+    const o = { y: y || 0, d: this._d || 0 };
     ['view', 'docId', 'serie', 'variant', 'kq', 'allUnits', 'q', 'fTemaer', 'fTypes', 'fOrgs', 'fYears', 'fSort', 'listLimit', 'from'].forEach((k) => { o[k] = s[k]; });
     return { vb: o };
   }
@@ -39,11 +40,13 @@ class Component extends DCLogic {
     } catch (e) {}
     // Tilbage og frem i browseren genskaber siden og rullepositionen fra historikken
     try {
+      this._d = 0;
       history.replaceState(this._snap(this.state, 0), '');
       window.addEventListener('popstate', (e) => {
         const h = e.state && e.state.vb;
         if (!h) return;
-        const { y, ...rest } = h;
+        const { y, d, ...rest } = h;
+        this._d = d || 0;
         this.setState({ ...rest, menuOpen: false, filtersOpen: false, upFiles: [], upShare: false, upSent: false, upError: '' });
         setTimeout(() => { try { window.scrollTo(0, y || 0); } catch (err) {} }, 80);
       });
@@ -613,7 +616,7 @@ class Component extends DCLogic {
 
     // Navigation. Sideskift får et punkt i browserens historik, så tilbage-knappen virker. Filtre opdaterer det aktuelle punkt.
     const sy = () => { try { return window.scrollY; } catch (e) { return 0; } };
-    const hist = (kind, x, y) => { try { history[kind](this._snap(x, y), ''); } catch (e) {} };
+    const hist = (kind, x, y) => { try { if (kind === 'pushState') this._d = (this._d || 0) + 1; history[kind](this._snap(x, y), ''); } catch (e) {} };
     const nav = (patch, y) => () => {
       if (['view', 'docId', 'serie'].every((k) => !(k in patch) || patch[k] === st[k])) { upd({ menuOpen: false, filtersOpen: false, ...patch }); return; }
       hist('replaceState', st, sy());
@@ -787,7 +790,7 @@ class Component extends DCLogic {
 
     // Valget mellem vidensdokumenter og de faste dokumenter: en liste i venstre side og en vandret række på mobil
     const collBase = 'display: flex; align-items: center; gap: 8px; width: 100%; min-height: 38px; padding: 0 10px; border: 0; border-radius: 8px; cursor: pointer; font: 500 15px "Roboto", Arial, sans-serif; text-align: left; ';
-    const collStyle = (on) => collBase + (on ? 'background: #E6F4EA; color: #0A602D; font-weight: 700; box-shadow: inset 3px 0 0 #0A602D;' : 'background: none; color: #24312A;');
+    const collStyle = (on) => collBase + (on ? 'background: #E6F4EA; color: #0A602D; font-weight: 700;' : 'background: none; color: #24312A;');
     const pill = (on) => 'flex: none; min-height: 40px; padding: 0 14px; border-radius: 999px; cursor: pointer; font: 500 14px "Roboto", Arial, sans-serif; white-space: nowrap; '
       + (on ? 'background: #0A602D; color: #FFFFFF; border: 1px solid #0A602D;' : 'background: #FFFFFF; color: #24312A; border: 1px solid #C9D2CD;');
 
@@ -960,7 +963,10 @@ class Component extends DCLogic {
       docQ: st.docQ, setDocQ: (e) => this.setState({ docQ: e.target.value, docAsked: false }),
       askDocNow: () => this.setState({ docAsked: true }),
       docAsked: docAi && st.docAsked && !!st.docQ.trim(), docAnswer: doc ? doc.res : '',
-      hasCrumb: !isHome, hasCrumbMid: !!crumbMid, crumbMid: crumbMid || {}, crumbHere
+      hasCrumb: !isHome, hasCrumbMid: !!crumbMid, crumbMid: crumbMid || {}, crumbHere,
+      // Tilbage går et skridt tilbage i browserens historik. Er man landet direkte på siden, går den til samme sted som brødkrummen.
+      goBack: () => { if ((this._d || 0) > 0) { try { history.back(); return; } catch (e) {} } (crumbMid ? crumbMid.go : crumbRoot)(); },
+      backBtnStyle: 'display: inline-flex; align-items: center; gap: 6px; min-height: ' + (narrow ? '44px' : '36px') + '; padding: 0 14px 0 10px; border: 1px solid #C9D2CD; border-radius: 999px; background: #FFFFFF; color: #0A602D; font: 500 14px "Roboto", Arial, sans-serif; cursor: pointer;'
     };
   }
 }

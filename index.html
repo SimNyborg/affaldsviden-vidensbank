@@ -9,6 +9,8 @@
 <style>
 body{margin:0}
 a{color:#0A602D}a:hover{color:#06401E}
+button:focus:not(:focus-visible){outline:none}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #0A602D;outline-offset:2px}
 .vb-hero{position:relative;isolation:isolate;background-color:#5E7A86;background-image:url(img/4def46095b79ff3fe83626bdb46ecce2.jpg);background-size:cover;background-position:center}
 .vb-hero::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(20,30,40,.38) 0%,rgba(20,30,40,.22) 45%,rgba(20,30,40,.08) 70%,rgba(20,30,40,.25) 100%)}
 .vb-hero-video{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;object-position:center;pointer-events:none}
@@ -123,13 +125,17 @@ a{color:#0A602D}a:hover{color:#06401E}
 
   <main id="vb-indhold" style="max-width: 1180px; margin: 0 auto; padding: 24px max(16px, 3vw) 56px; display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 0;">
 
+    <!-- Uden for hovedsiden: en diskret tilbage-knap til det sted, man kom fra, og brødkrummen ved siden af -->
     <template data-if="{{ hasCrumb }}">
-      <nav aria-label="Brødkrumme" style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 15px; color: #50656E; margin-bottom: -16px;">
-        <a href="#" onClick="{{ crumbRoot }}">Vidensbank</a>
-        <span aria-hidden="true">›</span>
-        <template data-if="{{ hasCrumbMid }}"><a href="#" onClick="{{ crumbMid.go }}">{{ crumbMid.label }}</a><span aria-hidden="true">›</span></template>
-        <span>{{ crumbHere }}</span>
-      </nav>
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: -8px;">
+        <button type="button" data-key="tilbage" onClick="{{ goBack }}" style="{{ backBtnStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="M11 18l-6-6 6-6"></path></svg><span>Tilbage</span></button>
+        <nav aria-label="Brødkrumme" style="display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; font-size: 15px; color: #50656E;">
+          <a href="#" onClick="{{ crumbRoot }}">Vidensbank</a>
+          <span aria-hidden="true">›</span>
+          <template data-if="{{ hasCrumbMid }}"><a href="#" onClick="{{ crumbMid.go }}">{{ crumbMid.label }}</a><span aria-hidden="true">›</span></template>
+          <span>{{ crumbHere }}</span>
+        </nav>
+      </div>
     </template>
 
     <!-- HOVEDSIDE: om vidensbanken øverst, filtre i venstre side og dokumenterne til højre. Alle dokumenter ligger her, uden en ekstra side.
