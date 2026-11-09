@@ -966,7 +966,7 @@ class Component extends DCLogic {
       hasCrumb: !isHome, hasCrumbMid: !!crumbMid, crumbMid: crumbMid || {}, crumbHere,
       // Tilbage går et skridt tilbage i browserens historik. Er man landet direkte på siden, går den til samme sted som brødkrummen.
       goBack: () => { if ((this._d || 0) > 0) { try { history.back(); return; } catch (e) {} } (crumbMid ? crumbMid.go : crumbRoot)(); },
-      backBtnStyle: 'display: inline-flex; align-items: center; gap: 6px; min-height: ' + (narrow ? '44px' : '36px') + '; padding: 0 14px 0 10px; border: 1px solid #C9D2CD; border-radius: 999px; background: #FFFFFF; color: #0A602D; font: 500 14px "Roboto", Arial, sans-serif; cursor: pointer;'
+      backBtnStyle: 'position: fixed; z-index: 20; right: max(20px, calc(env(safe-area-inset-right, 0px) + 16px)); bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 16px)); display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px 0 14px; border: 1px solid #C9D2CD; border-radius: 999px; background: #FFFFFF; color: #0A602D; font: 500 15px "Roboto", Arial, sans-serif; box-shadow: 0 4px 16px rgba(20, 40, 30, 0.14); cursor: pointer;'
     };
   }
 }

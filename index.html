@@ -125,17 +125,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 
   <main id="vb-indhold" style="max-width: 1180px; margin: 0 auto; padding: 24px max(16px, 3vw) 56px; display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 0;">
 
-    <!-- Uden for hovedsiden: en diskret tilbage-knap til det sted, man kom fra, og brødkrummen ved siden af -->
     <template data-if="{{ hasCrumb }}">
-      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: -8px;">
-        <button type="button" data-key="tilbage" onClick="{{ goBack }}" style="{{ backBtnStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="M11 18l-6-6 6-6"></path></svg><span>Tilbage</span></button>
-        <nav aria-label="Brødkrumme" style="display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; font-size: 15px; color: #50656E;">
-          <a href="#" onClick="{{ crumbRoot }}">Vidensbank</a>
-          <span aria-hidden="true">›</span>
-          <template data-if="{{ hasCrumbMid }}"><a href="#" onClick="{{ crumbMid.go }}">{{ crumbMid.label }}</a><span aria-hidden="true">›</span></template>
-          <span>{{ crumbHere }}</span>
-        </nav>
-      </div>
+      <nav aria-label="Brødkrumme" style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 15px; color: #50656E; margin-bottom: -16px;">
+        <a href="#" onClick="{{ crumbRoot }}">Vidensbank</a>
+        <span aria-hidden="true">›</span>
+        <template data-if="{{ hasCrumbMid }}"><a href="#" onClick="{{ crumbMid.go }}">{{ crumbMid.label }}</a><span aria-hidden="true">›</span></template>
+        <span>{{ crumbHere }}</span>
+      </nav>
     </template>
 
     <!-- HOVEDSIDE: om vidensbanken øverst, filtre i venstre side og dokumenterne til højre. Alle dokumenter ligger her, uden en ekstra side.
@@ -450,13 +446,18 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
     </template>
   </main>
 
+  <!-- Uden for hovedsiden: en lille tilbage-knap, der svæver i nederste højre hjørne og fører til det sted, man kom fra -->
+  <template data-if="{{ hasCrumb }}">
+    <button type="button" data-key="tilbage" onClick="{{ goBack }}" style="{{ backBtnStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="M11 18l-6-6 6-6"></path></svg><span>Tilbage</span></button>
+  </template>
+
   <footer style="background: #0A602D; color: #E6F4EA;">
     <div style="max-width: 1180px; margin: 0 auto; padding: 24px max(16px, 3vw); font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px 24px; justify-content: space-between;"><span>Affaldsviden.dk</span><span>Designforslag til en ny vidensbank. Prototype med eksempeldata.</span></div>
   </footer>
 </div>
 </template>
-<script src="dc-lite.js"></script>
-<script src="app.js"></script>
+<script src="dc-lite.js?v=e530f879dd"></script>
+<script src="app.js?v=94128aec13"></script>
 <script>dcMount(document.getElementById('app'), document.getElementById('vb-skabelon').innerHTML, Component, {});</script>
 </body>
 </html>
