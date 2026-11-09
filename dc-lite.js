@@ -4,6 +4,8 @@
 (function () {
   var HOLE = /\{\{\s*([\w.$]+)\s*\}\}/g;
   var ONLY = /^\s*\{\{\s*([\w.$]+)\s*\}\}\s*$/;
+  // Elementer med data-keep genbruges, når siden tegnes igen, så fx baggrundsvideoen ikke starter forfra
+  var KEPT = {};
 
   function get(scope, path) {
     if (path === 'true') return true;
@@ -36,6 +38,8 @@
       }
       return;
     }
+    var dk = n.getAttribute('data-keep');
+    if (dk && KEPT[dk]) { out.appendChild(KEPT[dk]); return; }
     // Samme navnerum som i skabelonen, så svg-ikoner bliver tegnet
     var el = document.createElementNS(n.namespaceURI, n.localName);
     var textValue = null;
@@ -73,12 +77,16 @@
       // Bevar fokus, markering og afkrydsninger, når siden tegnes igen. Valg i rullemenuer kommer fra tilstanden (value).
       var act = document.activeElement;
       var id = act && act.id && root.contains(act) ? act.id : '';
+      // Knapper uden id (fx filtrene) har en data-key, så fokus bliver på samme knap, når man bruger tastaturet
+      var dkey = !id && act && root.contains(act) && act.getAttribute ? act.getAttribute('data-key') : null;
       var sel = id && typeof act.selectionStart === 'number' ? [act.selectionStart, act.selectionEnd] : null;
       var keep = {};
       Array.prototype.forEach.call(root.querySelectorAll('input[id]'), function (x) {
         if (x.type === 'checkbox') keep[x.id] = { checked: x.checked };
       });
       var scrollers = Array.prototype.map.call(root.querySelectorAll('[data-scroll]'), function (x) { return x.scrollLeft; });
+      KEPT = {};
+      Array.prototype.forEach.call(root.querySelectorAll('[data-keep]'), function (x) { KEPT[x.getAttribute('data-keep')] = x; });
       var frag = document.createDocumentFragment();
       renderNodes(tpl.content.childNodes, c.renderVals(), frag);
       root.replaceChildren(frag);
@@ -88,8 +96,12 @@
         var f = document.getElementById(id);
         if (f) { f.focus({ preventScroll: true }); if (sel) try { f.setSelectionRange(sel[0], sel[1]); } catch (e) {} }
       }
+      if (dkey) {
+        var kf = root.querySelector('[data-key="' + (window.CSS && CSS.escape ? CSS.escape(dkey) : dkey) + '"]');
+        if (kf) kf.focus({ preventScroll: true });
+      }
       var st = c.state;
-      var key = [st.view, st.docId, st.serie, st.tema].join('|');
+      var key = [st.view, st.docId].join('|');
       if (lastKey && key !== lastKey) window.scrollTo(0, 0);
       lastKey = key;
     }
